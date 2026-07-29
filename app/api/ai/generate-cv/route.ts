@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import { GoogleGenAI } from "@google/genai";
 import { createClient } from "@/lib/supabase/server";
 import {
   CV_GENERATION_SYSTEM_PROMPT,
@@ -18,9 +18,9 @@ export async function POST() {
     return NextResponse.json({ error: "Neautentificat" }, { status: 401 });
   }
 
-  if (!process.env.OPENAI_API_KEY) {
+  if (!process.env.GEMINI_API_KEY) {
     return NextResponse.json(
-      { error: "OPENAI_API_KEY nu este configurată" },
+      { error: "GEMINI_API_KEY nu este configurată în .env.local" },
       { status: 500 }
     );
   }
@@ -96,25 +96,22 @@ export async function POST() {
   };
 
   try {
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      temperature: 0.4,
-      messages: [
-        { role: "system", content: CV_GENERATION_SYSTEM_PROMPT },
-        { role: "user", content: buildCVGenerationUserMessage(input) },
-      ],
-      response_format: {
-        type: "json_schema",
-        json_schema: CV_JSON_SCHEMA,
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: buildCVGenerationUserMessage(input),
+      config: {
+        systemInstruction: CV_GENERATION_SYSTEM_PROMPT,
+        responseMimeType: "application/json",
+        responseSchema: CV_JSON_SCHEMA as any,
       },
     });
 
-    const raw = completion.choices[0].message.content;
+    const raw = response.text;
     if (!raw) {
       return NextResponse.json(
-        { error: "Răspuns gol de la OpenAI" },
+        { error: "Răspuns gol de la Gemini" },
         { status: 500 }
       );
     }
@@ -136,7 +133,7 @@ export async function POST() {
       cv: generated,
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Eroare OpenAI";
+    const message = err instanceof Error ? err.message : "Eroare Gemini";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
