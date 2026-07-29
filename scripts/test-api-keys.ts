@@ -1,9 +1,9 @@
 /**
- * EduLink — Script de validare API keys
+ * EduLink - Script de validare API keys
  * Rulare: npx tsx scripts/test-api-keys.ts
  */
 
-import OpenAI from "openai";
+import { GoogleGenAI } from "@google/genai";
 
 interface TestResult {
   service: string;
@@ -11,34 +11,34 @@ interface TestResult {
   message: string;
 }
 
-async function testOpenAI(): Promise<TestResult> {
-  const key = process.env.OPENAI_API_KEY;
+async function testGemini(): Promise<TestResult> {
+  const key = process.env.GEMINI_API_KEY;
   if (!key) {
     return {
-      service: "OpenAI (gpt-4o-mini)",
+      service: "Google Gemini (gemini-2.5-flash)",
       status: "missing",
-      message: "OPENAI_API_KEY lipsește din .env.local",
+      message: "GEMINI_API_KEY lipseste din .env.local",
     };
   }
 
   try {
-    const openai = new OpenAI({ apiKey: key });
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: "Răspunde doar cu: OK" }],
-      max_tokens: 5,
+    const ai = new GoogleGenAI({ apiKey: key });
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: "Raspunde doar cu: OK",
     });
-    const content = response.choices[0]?.message?.content ?? "";
+    const content = response.text ?? "";
+
     return {
-      service: "OpenAI (gpt-4o-mini)",
+      service: "Google Gemini (gemini-2.5-flash)",
       status: "ok",
-      message: `Conexiune reușită. Răspuns: "${content.trim()}"`,
+      message: `Conexiune reusita. Raspuns: "${content.trim()}"`,
     };
   } catch (err) {
     return {
-      service: "OpenAI (gpt-4o-mini)",
+      service: "Google Gemini (gemini-2.5-flash)",
       status: "error",
-      message: err instanceof Error ? err.message : "Eroare necunoscută",
+      message: err instanceof Error ? err.message : "Eroare necunoscuta",
     };
   }
 }
@@ -51,8 +51,7 @@ async function testGoogleCalendar(): Promise<TestResult> {
     return {
       service: "Google Calendar API",
       status: "missing",
-      message:
-        "GOOGLE_CLIENT_ID sau GOOGLE_CLIENT_SECRET lipsesc din .env.local",
+      message: "GOOGLE_CLIENT_ID sau GOOGLE_CLIENT_SECRET lipsesc din .env.local",
     };
   }
 
@@ -65,16 +64,17 @@ async function testGoogleCalendar(): Promise<TestResult> {
         message: `Discovery API returned ${res.status}`,
       };
     }
+
     return {
       service: "Google Calendar API",
       status: "ok",
-      message: `Credențiale configurate. Client ID: ${clientId.slice(0, 12)}...`,
+      message: `Credentiale configurate. Client ID: ${clientId.slice(0, 12)}...`,
     };
   } catch (err) {
     return {
       service: "Google Calendar API",
       status: "error",
-      message: err instanceof Error ? err.message : "Eroare necunoscută",
+      message: err instanceof Error ? err.message : "Eroare necunoscuta",
     };
   }
 }
@@ -95,45 +95,43 @@ async function testSupabase(): Promise<TestResult> {
     const res = await fetch(`${url}/rest/v1/`, {
       headers: { apikey: key },
     });
+
     return {
       service: "Supabase",
       status: res.ok || res.status === 401 ? "ok" : "error",
-      message: `Endpoint accesibil (${res.status}) — ${url}`,
+      message: `Endpoint accesibil (${res.status}) - ${url}`,
     };
   } catch (err) {
     return {
       service: "Supabase",
       status: "error",
-      message: err instanceof Error ? err.message : "Eroare necunoscută",
+      message: err instanceof Error ? err.message : "Eroare necunoscuta",
     };
   }
 }
 
 async function main() {
-  console.log("═══════════════════════════════════════════");
-  console.log(" EduLink — Validare API Keys");
-  console.log("═══════════════════════════════════════════\n");
+  console.log("EduLink - Validare API Keys\n");
 
   const results = await Promise.all([
     testSupabase(),
-    testOpenAI(),
+    testGemini(),
     testGoogleCalendar(),
   ]);
 
-  for (const r of results) {
-    const icon =
-      r.status === "ok" ? "✅" : r.status === "missing" ? "⚠️" : "❌";
-    console.log(`${icon} ${r.service}`);
-    console.log(`   ${r.message}\n`);
+  for (const result of results) {
+    const icon = result.status === "ok" ? "OK" : result.status === "missing" ? "MISSING" : "ERROR";
+    console.log(`[${icon}] ${result.service}`);
+    console.log(`   ${result.message}\n`);
   }
 
-  const failed = results.filter((r) => r.status !== "ok");
+  const failed = results.filter((result) => result.status !== "ok");
   if (failed.length > 0) {
     console.log(`Rezultat: ${results.length - failed.length}/${results.length} servicii OK`);
     process.exit(1);
   }
 
-  console.log("Toate serviciile configurate funcționează!");
+  console.log("Toate serviciile configurate functioneaza!");
 }
 
 main();

@@ -3,11 +3,11 @@
  * EduLink — Microserviciu AI de generare CV (ATS-Optimized)
  * Fișier: lib/ai/generate-cv-prompt.ts
  * Folosit în: POST /api/ai/generate-cv  (vezi PRD.md, secțiunea 3.C)
- * Model: gpt-4o-mini (OpenAI Chat Completions API, Structured Outputs)
+ * Model: gemini-2.5-flash (Google Gemini API)
  * ============================================================================
  *
  * SCOP:
- * Acest modul construiește promptul + schema JSON care obligă gpt-4o-mini să
+ * Acest modul construiește promptul + schema JSON care obligă gemini-2.5-flash să
  * transforme datele reale ale unui student (din tabelele Supabase: profiles,
  * educations, experiences, projects, certificates, skills) într-un CV
  * structurat, optimizat ATS, FĂRĂ halucinații — modelul poate reformula,
@@ -119,7 +119,7 @@ STRICT INTERZIS (halucinație = eșec critic):
   îmbunătățit performanța sistemului" — NU "a redus timpul cu 40%").
 - NU adaugi tehnologii/certificări/competențe suplimentare care nu apar în
   array-urile de input, chiar dacă "s-ar potrivi bine" cu rolul dedus.
-- NU modifici date calendaristice, note (GPA), sau statusul "is_verified" al
+- NU modifici date calendaristice, note (GPA), sau statusul is_verified al
   certificatelor.
 - Dacă o secțiune (ex: experiences) este goală ([]) în input, secțiunea
   corespunzătoare din output rămâne un array gol — NU completezi cu exemple
@@ -431,7 +431,7 @@ export function buildCVGenerationUserMessage(input: CVGenerationInput): string {
 // ----------------------------------------------------------------------------
 
 /*
-import OpenAI from "openai";
+import { GoogleGenAI } from "@google/genai";
 import {
   CV_GENERATION_SYSTEM_PROMPT,
   CV_JSON_SCHEMA,
@@ -439,24 +439,21 @@ import {
   type CVGenerationInput,
 } from "@/lib/ai/generate-cv-prompt";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export async function generateCV(input: CVGenerationInput) {
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    temperature: 0.4, // suficient de scăzut pentru consistență factuală, permite reformulare
-    messages: [
-      { role: "system", content: CV_GENERATION_SYSTEM_PROMPT },
-      { role: "user", content: buildCVGenerationUserMessage(input) },
-    ],
-    response_format: {
-      type: "json_schema",
-      json_schema: CV_JSON_SCHEMA,
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: buildCVGenerationUserMessage(input),
+    config: {
+      systemInstruction: CV_GENERATION_SYSTEM_PROMPT,
+      responseMimeType: "application/json",
+      responseSchema: CV_JSON_SCHEMA,
     },
   });
 
-  const raw = completion.choices[0].message.content;
-  if (!raw) throw new Error("Răspuns gol de la gpt-4o-mini.");
+  const raw = response.text;
+  if (!raw) throw new Error("Raspuns gol de la Gemini.");
 
   return JSON.parse(raw); // shape validat de schema de mai sus
 }

@@ -11,7 +11,7 @@
 * **Styling & Design System:** Tailwind CSS 4, componente bazate pe arhitectura `shadcn/ui` (fara animatii inutile sau elemente vizuale incarcate / *no AI slop*). Suport nativ si obligatoriu pentru **Light Mode** si **Dark Mode** prin variabile CSS si clase de Dark Mode.
 * **Baza de date & Auth:** Supabase Cloud (PostgreSQL 16+) cu Row Level Security (RLS) strict activat, triggers automatizati si indici optimizati pe Foreign Keys si coloanele de filtrare.
 * **Integrari API Externe:** 
-  * **OpenAI API:** Modelul `gpt-4o-mini` (pentru microserviciile AI de analiza ATS si generare CV).
+  * **Gemini API:** Modelul `gemini-2.5-flash` (pentru microserviciile AI de analiza ATS si generare CV).
   * **Google Calendar API:** OAuth 2.0 pentru sincronizarea evenimentelor academice si interviurilor.
 * **Mediu Local & DevOps:** Gazduire locala pe discul `E:\project\edulink` (sistem Windows / PowerShell), versionare Git prin GitHub, CI/CD si deployment automat prin **Vercel (Production Ready)**. Cursor IDE utilizeaza servere MCP (Model Context Protocol) pentru interogarea structurii bazei de date in timp real.
 
@@ -76,7 +76,7 @@ Aflat in navigatia principala sub sectiunea `/dashboard/student/ai-hub`.
 * **Butonul „Genereaza CV” (Turquoise`#065465`):**
   * *Comportament UI:* La click, butonul intra in stare de loading cu spinner animat si textul „AI-ul analizeaza experienta ta...”.
   * *Logica Backend:* Apeleaza ruta pe server `POST /api/ai/generate-cv`. Route Handler-ul aduna tot istoricul din tabelele `profiles`, `educations`, `experiences`, `projects`, `profiles`, `certificats` si `skills` pentru `auth.uid()`.
-  * *OpenAI Integration:* Trimite payload-ul catre `gpt-4o-mini` cu un System Prompt strict: reformularea actiunilor folosind verbe puternice de impact, eliminarea greselilor gramaticale, generarea unui scor ATS de la 0 la 100% bazat pe densitatea de cuvinte-cheie tehnice si oferirea a 3 sugestii de imbunatatire.
+  * *Gemini Integration:* Trimite payload-ul catre `gemini-2.5-flash` cu un System Prompt strict: reformularea actiunilor folosind verbe puternice de impact, eliminarea greselilor gramaticale, generarea unui scor ATS de la 0 la 100% bazat pe densitatea de cuvinte-cheie tehnice si oferirea a 3 sugestii de imbunatatire.
   * *Output:* Raspunsul JSON este preluat si compilat pe client intr-un document PDF formal, aerisit, cu fonturi lizibile (fara grafice complexe incompatibile cu cititoarele ATS) folosind `@react-pdf/renderer` sau `jspdf`, declansand descarcarea automata.
 * **Butonul „Publica Portofoliu” (Turquoise`#065465`):**
   * *Logica:* Transforma profilul intr-o pagina publica, mapata pe ruta dinamica `/portofoliu/[qr_code_slug]`. 

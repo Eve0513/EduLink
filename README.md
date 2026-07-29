@@ -14,7 +14,7 @@ EduLink is a desktop-first academic and professional identity platform for stude
 - **Auth and Data:** Supabase Auth, PostgreSQL, Storage, Row Level Security
 - **UI:** Tailwind CSS v4, shadcn-style components, native light/dark CSS variables
 - **Forms:** React Hook Form, Zod validation, inline error states
-- **AI Prep:** OpenAI `gpt-4o-mini` route scaffold for ATS CV generation
+- **AI Prep:** Gemini `gemini-2.5-flash` route scaffold for ATS CV generation
 - **Integrations:** Google Calendar API validation script scaffold
 
 ## Features
@@ -28,7 +28,7 @@ EduLink is a desktop-first academic and professional identity platform for stude
 - Optimistic profile editing in the student dashboard
 - Dynamic public portfolio route at `/portofoliu/[slug]`
 - AI route scaffolds for CV and portfolio website generation
-- API key validation script for Supabase, OpenAI, and Google Calendar readiness
+- API key validation script for Supabase, Gemini, and Google Calendar readiness
 
 ## Screenshots
 
@@ -46,7 +46,7 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open `https://edulink1-nine.vercel.app/`.
 
 ## Environment Variables
 
@@ -62,7 +62,7 @@ Required values:
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-OPENAI_API_KEY=sk-your-openai-key
+GEMINI_API_KEY="cheia_ta_copiata_din_google_ai_studio"
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback
