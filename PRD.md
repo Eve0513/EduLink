@@ -13,14 +13,13 @@
 * **Integrări API Externe:** 
   * **OpenAI API:** Modelul `gpt-4o-mini` (pentru microserviciile AI de analiză ATS și generare CV).
   * **Google Calendar API:** OAuth 2.0 pentru sincronizarea evenimentelor academice și interviurilor.
-  * **Hipolabs Universities API:** API REST public pentru completarea automată (*autocomplete*) a numelor instituțiilor de învățământ.
 * **Mediu Local & DevOps:** Găzduire locală pe discul `E:\project\edulink` (sistem Windows / PowerShell), versionare Git prin GitHub, CI/CD și deployment automat prin **Vercel (Production Ready)**. Cursor IDE utilizează servere MCP (Model Context Protocol) pentru interogarea structurii bazei de date în timp real.
 
 ---
 
 ## 1. VIZIUNEA PRODUSULUI & OBIECTIVE (PRODUCT VISION)
 * **Nume Proiect:** EduLink
-* **Concept:** O platformă hibridă care combină capabilitățile de networking profesional, branding și recrutare din **LinkedIn** cu minimalismul, accesibilitatea instantanee și formatul de portofoliu unificat din **Linktree**.
+* **Concept:** O platformă hibridă care combină capabilitățile de networking profesional, branding și recrutare din **LinkedIn** cu minimalismul, accesibilitatea instantanee și formatul de portofoliu unificat din **Linktree** si postarea evenimentelor si postarea propriu zisa de pe **Facebook**
 * **Misiunea Principală:** Integrarea organică și timpurie a studenților, elevilor și studenților internaționali (Erasmus) în piața muncii și în ecosistemul academic superior. 
 * **Problema Rezolvată:** Elimină redundanța trimiterii repetitive a zeci de CV-uri și documente separate. Studentul își actualizează profilul digital o singură dată, iar platforma distribuie datele verificate prin link unic sau cod QR către angajatori, coordonatori Erasmus și comisiile de admitere.
 
@@ -58,7 +57,7 @@ Toate operațiunile de modificare sau ștergere din dashboard-ul studentului (`/
   * *Avatar Uploader:* Conectat la Supabase Storage (bucket-ul `avatars`). Permite drag-and-drop, restricționează tipul la `PNG/JPG/WEBP` (max 2MB), generează un nume unic pe bază de UUID, urcă fișierul și salvează URL-ul public în tabelul `profiles`.
   * *Input-uri text:* Nume complet, Headline profesional (ex: „Student la Electronică | C++ & Embedded Systems”), Bio (textarea max 500 caractere), Locație, Link-uri sociale (GitHub, LinkedIn, Website personal).
 * **Educație (`/dashboard/student/education`):**
-  * *Autocomplete Universitate:* Input debounced (300ms) care interogează public API-ul Hipolabs: `GET http://universities.hipolabs.com/search?name={query}&country=Romania`. Când utilizatorul selectează o universitate din drop-down, numele oficial se populează în câmpul `institution_name`.
+  * *Autocomplete Universitate:* Input debounced (300ms) care interogează fisierul `mockData.ts` Când utilizatorul selectează o universitate din drop-down, numele oficial se populează în câmpul `institution_name`.
   * *Alte câmpuri:* Nivel diplomă (Licență, Master, Doctorat, Erasmus Exchange), Domeniu de studiu, Data de început, Data de sfârșit (sau switch „În curs”), Medie academică / GPA (input numeric restricționat între 1.00 și 10.00).
 * **Experiență (`/dashboard/student/experience`):**
   * Tip experiență (Job Full-time, Part-time, Internship, Voluntariat), Nume companie/organizație, Titlul postului, Locație, Perioadă de activitate, Descriere detaliată (optimizată pentru analiza ATS).
@@ -74,14 +73,13 @@ Toate operațiunile de modificare sau ștergere din dashboard-ul studentului (`/
 
 ### C. Panoul de Microservicii și Generatoare AI (Core Value)
 Aflat în navigația principală sub secțiunea `/dashboard/student/ai-hub`.
-* **Butonul „Generează CV” (Tech Blue `#0A84FF`):**
+* **Butonul „Generează CV” (Turquoise`#065465`):**
   * *Comportament UI:* La click, butonul intră în stare de loading cu spinner animat și textul „AI-ul analizează experiența ta...”.
-  * *Logică Backend:* Apelează ruta pe server `POST /api/ai/generate-cv`. Route Handler-ul adună tot istoricul din tabelele `profiles`, `educations`, `experiences`, `projects` și `skills` pentru `auth.uid()`.
+  * *Logică Backend:* Apelează ruta pe server `POST /api/ai/generate-cv`. Route Handler-ul adună tot istoricul din tabelele `profiles`, `educations`, `experiences`, `projects`, `profiles`, `certificats` și `skills` pentru `auth.uid()`.
   * *OpenAI Integration:* Trimite payload-ul către `gpt-4o-mini` cu un System Prompt strict: reformularea acțiunilor folosind verbe puternice de impact, eliminarea greșelilor gramaticale, generarea unui scor ATS de la 0 la 100% bazat pe densitatea de cuvinte-cheie tehnice și oferirea a 3 sugestii de îmbunătățire.
   * *Output:* Răspunsul JSON este preluat și compilat pe client într-un document PDF formal, aerisit, cu fonturi lizibile (fără grafice complexe incompatibile cu cititoarele ATS) folosind `@react-pdf/renderer` sau `jspdf`, declanșând descărcarea automată.
-* **Butonul „Publică Portofoliu” (Violet `#BF5AF2`):**
+* **Butonul „Publică Portofoliu” (Turquoise`#065465`):**
   * *Logică:* Transformă profilul într-o pagină publică, mapată pe ruta dinamică `/portofoliu/[qr_code_slug]`. 
-  * *Paywall Feature:* Dacă utilizatorul este pe planul Student Free, adresa generată este strict de forma `https://edulink.com/portofoliu/slug-unic`. Dacă deține abonamentul Student Pro, interfața deblochează o opțiune CNAME pentru conectarea unui domeniu custom (ex: `https://alexandru-dev.ro`).
 * **Butonul „Generează Cod QR” (Bordered Secondary):**
   * *Logică Tehnică:* Interzedă utilizarea API-urilor externe de tracking (ex: Google Chart API sau servicii de QR online). Generatorul apelează o funcție locală pe server sau client utilizând librăria consacrată `qrcode`.
   * *UI Modal:* Deschide un modal care prezintă codul QR generat în timp real, cu opțiuni de descărcare ca SVG (pentru printare vectorială pe CV-uri fizice) sau PNG de înaltă rezoluție (400x400px).
@@ -93,13 +91,11 @@ Aflat în navigația principală sub secțiunea `/dashboard/student/ai-hub`.
   * *Google Calendar Integration:* După aplicarea cu succes la un curs sau workshop, pe card apare butonul suplimentar „Salvează în Google Calendar”. La click, se inițiază un flux OAuth 2.0. După aprobare, Next.js apelează Google Calendar API (`https://www.googleapis.com/calendar/v3/calendars/primary/events`), injectând un obiect RFC 3339 conținând titlul workshop-ului, data, ora și link-ul de acces direct.
 
 * **HR Engine — Interfața pentru Companii și Instituții (`/hr-engine`):**
-  * *Accesibilitate:* Vizibilă exclusiv utilizatorilor cu rolul `company` (necesită plan Company Pro activat) și `institution`.
+  * *Accesibilitate:* Vizibilă exclusiv utilizatorilor cu rolul `company` și `institution`.
   * *Bară de Căutare & Filtrare Smart:* O componentă complexă de filtrare cu debouncing și interogări parametrizate în Supabase:
     * Selectoare multiple pentru skill-uri tehnice (ex: C#, Next.js, SQL).
-    * Autocomplete pentru universitatea de proveniență (interogare API Hipolabs).
+    * Autocomplete pentru universitatea de proveniență `mockData.ts`.
     * Slider pentru Medie minimă GPA (ex: doar studenți cu media > 8.50).
-    * Switch-ul de încredere maximă: **„Doar studenți cu certificate verificate”**. Când este activat, interogarea SQL filtrează clienții aplicând un `JOIN` pe tabelul `certificates` unde `is_verified = true`.
-  * *Afișare Rezultate:* Listă de carduri agregate de talente. Studenții care au diplome validate de o universitate au un contur de accent verde și o bifă oficială SVG lângă nume, transmițând maximă încredere recrutorilor.
 
 ---
 
@@ -108,29 +104,310 @@ Aflat în navigația principală sub secțiunea `/dashboard/student/ai-hub`.
 ### A. Securitate Supabase Client & RLS (Row Level Security)
 Toate tabelele din PostgreSQL trebuie să aibă RLS activat prin comanda SQL `ALTER TABLE nume_tabel ENABLE ROW LEVEL SECURITY;`. Nu se admit excepții.
 
-```sql
--- EXEMPLU DE POLITICĂ STRICTĂ RLS PENTRU MODIFICAREA DATELOR DIN PROFIL:
-CREATE POLICY "Utilizatorii pot modifica doar datele propriului profil"
-ON public.profiles
-FOR UPDATE
-USING (auth.uid() = id)
-WITH CHECK (auth.uid() = id);
+### Database deja implementata in Supabase:
+-- ====================================================================
+-- 1. TIPURI ENUMERATE
+-- ====================================================================
+CREATE TYPE user_role AS ENUM ('student', 'institution', 'company', 'admin');
+CREATE TYPE ai_generation_type AS ENUM ('cv_optimization', 'website_portfolio', 'ats_check');
+CREATE TYPE work_mode AS ENUM ('onsite', 'hybrid', 'remote');
+CREATE TYPE job_type AS ENUM ('fulltime', 'parttime', 'contract', 'volunteer', 'temporary', 'internship', 'other');
+CREATE TYPE event_mode AS ENUM ('fizic', 'virtual');
+CREATE TYPE event_frequency AS ENUM ('niciodata', 'zilnic', 'saptamanal');
+CREATE TYPE degree_type AS ENUM ('Licenta', 'Master', 'Doctorat', 'Bacalaureat');
 
--- EXEMPLU DE POLITICĂ RLS PENTRU CERTIFICATE:
-CREATE POLICY "Studentul isi poate edita doar propriile certificate"
-ON public.certificates
-FOR ALL
-USING (auth.uid() = profile_id)
-WITH CHECK (auth.uid() = profile_id);
 
--- POLITICĂ RLS PENTRU VERIFICAREA CERTIFICATELOR DE CĂTRE INSTITUȚII:
-CREATE POLICY "Institutiile pot valida certificatele studentilor"
-ON public.certificates
-FOR UPDATE
-USING (
-  EXISTS (
-    SELECT 1 FROM public.profiles
-    WHERE profiles.id = auth.uid() AND profiles.role = 'institution'
-  )
-)
-WITH CHECK (is_verified = true);
+-- ====================================================================
+-- 2. TABELE PRINCIPALE
+-- ====================================================================
+CREATE TABLE profiles (
+    id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now()) NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    full_name TEXT NOT NULL,
+    role user_role DEFAULT 'student' NOT NULL,
+    headline TEXT,
+    bio TEXT,
+    avatar_url TEXT,
+    background_url TEXT,
+    location TEXT,
+    followers_count INT DEFAULT 0,
+    qr_code_slug TEXT UNIQUE
+);
+
+
+-- ====================================================================
+-- 3. TABELE STUDENT
+-- ====================================================================
+CREATE TABLE educations (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    profile_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+    institution_name TEXT NOT NULL,
+    degree degree_type NOT NULL,
+    field_of_study TEXT NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE,
+    is_current BOOLEAN DEFAULT false,
+    gpa NUMERIC(3,2) CHECK (gpa >= 1.00 AND gpa <= 10.00)
+);
+
+
+CREATE TABLE experiences (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    profile_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+    company_name TEXT NOT NULL,
+    position_title TEXT NOT NULL,
+    location TEXT,
+    work_mode work_mode,
+    job_type job_type,
+    start_date DATE NOT NULL,
+    end_date DATE,
+    is_current BOOLEAN DEFAULT false,
+    description TEXT
+);
+
+
+CREATE TABLE projects (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    profile_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+    experience_id UUID REFERENCES experiences(id),
+    education_id UUID REFERENCES educations(id),
+    title TEXT NOT NULL,
+    description TEXT,
+    github_url TEXT,
+    live_demo_url TEXT,
+    technologies TEXT[],
+    image_url TEXT
+);
+
+
+CREATE TABLE certificates (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    profile_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+    title TEXT NOT NULL,
+    issuing_organization TEXT NOT NULL,
+    issue_date DATE,
+    expiry_date DATE,
+    credential_url TEXT,
+ );
+
+
+CREATE TABLE skills (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    profile_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+    name TEXT NOT NULL,
+    level TEXT CHECK (level IN ('Începător','Avansat','Expert'))
+);
+
+
+-- ====================================================================
+-- 4. TABELE AI & QR
+-- ====================================================================
+CREATE TABLE ai_generations (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    profile_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now()) NOT NULL,
+    generation_type ai_generation_type NOT NULL,
+    input_prompt TEXT,
+    generated_content JSONB NOT NULL,
+    ats_score INT CHECK (ats_score BETWEEN 0 AND 100)
+);
+
+
+CREATE TABLE qr_codes (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    profile_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+    qr_slug TEXT UNIQUE NOT NULL,
+    qr_svg_url TEXT,
+    qr_png_url TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now()) NOT NULL
+);
+
+
+-- ====================================================================
+-- 5. TABELE COMPANII & EVENIMENTE
+-- ====================================================================
+CREATE TABLE companies (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL,
+    location TEXT,
+    sector TEXT,
+    created_by UUID REFERENCES profiles(id) ON DELETE SET NULL,
+    link_site text,
+    verified BOOLEAN DEFAULT false,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+
+CREATE TABLE posts (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    creator_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+    content TEXT NOT NULL,
+    image_url TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now()) NOT NULL
+);
+
+
+-- 2. TABELUL JOBURI & INTERNSHIP-URI
+CREATE TABLE jobs (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    company_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    requirements TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now()) NOT NULL
+);
+
+
+CREATE TABLE events (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    creator_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+    image_url TEXT,
+    location TEXT,
+    start_date DATE,
+    start_time TIME,
+    timezone TEXT,
+    mode event_mode,
+    description TEXT,
+    frequency event_frequency,
+    end_date DATE,
+    end_time TIME,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now()) NOT NULL
+);
+
+
+-- ====================================================================
+-- 6. TRIGGERS
+-- ====================================================================
+CREATE OR REPLACE FUNCTION handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO profiles (id, email, full_name, qr_code_slug)
+    VALUES (
+        NEW.id,
+        NEW.email,
+        COALESCE(NEW.raw_user_meta_data->>'full_name', 'UTILIZATOR NOU'),
+        LOWER(REPLACE(COALESCE(NEW.raw_user_meta_data->>'full_name', 'user'), ' ', '-')) || '-' || SUBSTRING(NEW.id::text, 1, 6)
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+
+CREATE OR REPLACE TRIGGER on_auth_user_created
+AFTER INSERT ON auth.users
+FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+
+
+CREATE OR REPLACE FUNCTION regenerate_qr()
+RETURNS TRIGGER AS $$
+BEGIN
+    DELETE FROM qr_codes WHERE profile_id = NEW.profile_id;
+    INSERT INTO qr_codes (profile_id, qr_slug)
+    VALUES (NEW.profile_id, LOWER(REPLACE(NEW.qr_slug, ' ', '-')));
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+
+CREATE OR REPLACE TRIGGER on_qr_regeneration
+AFTER INSERT OR UPDATE ON qr_codes
+FOR EACH ROW EXECUTE FUNCTION regenerate_qr();
+
+
+-- ====================================================================
+-- 7. RLS POLICIES
+-- ====================================================================
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE educations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE experiences ENABLE ROW LEVEL SECURITY;
+ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
+ALTER TABLE certificates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE skills ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ai_generations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE qr_codes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
+ALTER TABLE events ENABLE ROW LEVEL SECURITY;
+
+
+-- Profiles
+CREATE POLICY "Profilurile sunt publice pentru vizualizare" ON profiles FOR SELECT USING (true);
+CREATE POLICY "Utilizatorii își pot modifica doar propriul profil" ON profiles FOR UPDATE USING (auth.uid() = id);
+
+
+-- Educație, Experiență, Proiecte, Certificate, Skills
+CREATE POLICY "Educatia este publica" ON educations FOR SELECT USING (true);
+CREATE POLICY "Experienta este publica" ON experiences FOR SELECT USING (true);
+CREATE POLICY "Proiectele sunt publice" ON projects FOR SELECT USING (true);
+CREATE POLICY "Certificatele sunt publice" ON certificates FOR SELECT USING (true);
+CREATE POLICY "Skill-urile sunt publice" ON skills FOR SELECT USING (true);
+
+
+CREATE POLICY "CRUD propriu pe educatie" ON educations FOR ALL USING (auth.uid() = profile_id);
+CREATE POLICY "CRUD propriu pe experienta" ON experiences FOR ALL USING (auth.uid() = profile_id);
+CREATE POLICY "CRUD propriu pe proiecte" ON projects FOR ALL USING (auth.uid() = profile_id);
+CREATE POLICY "CRUD propriu pe certificate" ON certificates FOR ALL USING (auth.uid() = profile_id);
+CREATE POLICY "CRUD propriu pe skills" ON skills FOR ALL USING (auth.uid() = profile_id);
+
+
+-- AI Generations
+CREATE POLICY "Generarile AI sunt strict private" ON ai_generations FOR ALL USING (auth.uid() = profile_id);
+
+
+-- QR Codes
+CREATE POLICY "Codurile QR sunt private" ON qr_codes FOR ALL USING (auth.uid() = profile_id);
+
+
+-- Companies
+CREATE POLICY "Companiile sunt publice pentru vizualizare" ON companies FOR SELECT USING (verified = true);
+CREATE POLICY "Creatorul poate edita compania" ON companies FOR UPDATE USING (auth.uid() = created_by);
+
+
+
+
+
+
+-- Events
+CREATE POLICY "Evenimentele sunt publice pentru vizualizare" ON events FOR SELECT USING (true);
+CREATE POLICY "CRUD propriu pe evenimente" ON events FOR ALL USING (auth.uid() = creator_id);
+
+
+CREATE INDEX idx_posts_creator_id ON posts(creator_id);
+CREATE INDEX idx_posts_created_at ON posts(created_at DESC);
+
+
+CREATE INDEX idx_jobs_company_id ON jobs(company_id);
+CREATE INDEX idx_jobs_created_at ON jobs(created_at DESC);
+
+
+CREATE INDEX idx_events_creator_id ON events(creator_id);
+CREATE INDEX idx_events_start_date ON events(start_date);
+
+
+-- ====================================================================
+-- POLITICI RLS STRICTE (ROW LEVEL SECURITY) CU 'WITH CHECK'
+-- ====================================================================
+
+
+ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE jobs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE events ENABLE ROW LEVEL SECURITY;
+
+
+-- Politici pentru Postări (Feed)
+CREATE POLICY "Postarile sunt vizibile publicului" ON posts FOR SELECT USING (true);
+CREATE POLICY "CRUD complet pe postari proprii" ON posts FOR ALL USING (auth.uid() = creator_id) WITH CHECK (auth.uid() = creator_id);
+
+
+-- Politici pentru Joburi
+CREATE POLICY "Joburile sunt vizibile publicului" ON jobs FOR SELECT USING (true);
+CREATE POLICY "Doar companiile isi pot gestiona joburile" ON jobs FOR ALL USING (auth.uid() = company_id) WITH CHECK (auth.uid() = company_id);
+
+
+-- Politici pentru Evenimente
+CREATE POLICY "Evenimentele sunt vizibile publicului" ON events FOR SELECT USING (true);
+CREATE POLICY "CRUD complet pe evenimentele proprii" ON events FOR ALL USING (auth.uid() = creator_id) WITH CHECK (auth.uid() = creator_id);
+
+
+

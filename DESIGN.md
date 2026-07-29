@@ -1,274 +1,321 @@
 # 🎨 DESIGN.md — ARHITECTURA VIZUALĂ ȘI GHIDUL DE STIL EDULINK
 
 > **REGULĂ DE AUR PENTRU CURSOR AI ȘI DEZVOLTATORI:**
-> Acest fișier definește standardele vizuale absolute pentru aplicația EduLink. Este interzisă generarea de interfețe generice, nealiniate sau încărcate („AI Slop”). Orice componentă trebuie să respecte grila matematică de spațiere (sistem multiplu de 4px/8px), paleta semantică Tailwind CSS v4.0 și principiile de design minimalist, inspirate din **shadcn/ui**, **Vercel Design System**, **Linear** și **Apple Dashboard**.
+> Acest fișier definește standardele vizuale absolute pentru aplicația EduLink. Este strict interzisă generarea de interfețe generice, nealiniate sau încărcate („AI Slop”). Orice componentă trebuie să respecte grila matematică de spațiere (sistem bazat pe multipli de 4px/8px), paleta semantică Tailwind CSS v4.0 și principiile de design minimalist, inspirate din **shadcn/ui**, **Vercel Design System**, **Linear** și **Apple Dashboard**.
 
 ---
 
 ## 1. Principiile de Bază ale Designului (Design Philosophy)
 
-* **Minimalism Premium (Function over Decoration):** Fiecare pixel are o justificare clară. Se folosesc spații albe generoase (whitespace/negative space) pentru a ghida ochiul, colțuri rotunjite uniform și umbre milimetrice pentru elevație. Nu folosim ornamente vizuale fără funcționalitate (fără forme geometrice plutitoare sau accente inutile).
-* **Toleranță Zero pentru „AI Slop”:** Este strict interzisă utilizarea gradientelor stridente, a chenarelor groase (mai mari de `1px` pentru separatori) sau luminoase, a fundalurilor negre opace fără textură în dark mode, precum și a fonturilor multiple amestecate. Elementele nu trebuie să pară supradimensionate; interfața trebuie să aibă densitatea informațională a unui instrument profesional de analiză (pro-tool density).
-* **Consistență Arhitecturală (Single Design Language):** Orice tabel, card de dashboard, formular de autentificare sau modal de confirmare va moșteni aceleași clase fundamentale. Butoanele principale au întotdeauna aceeași înălțime, padding și rafinament al stărilor la interacțiune pe tot parcursul proiectului.
-* **Obsesia pentru Feedback-ul Imediat (Micro-Reassurance):** O aplicație impecabilă comunică constant cu utilizatorul. Orice acțiune (salvare CV, ștergere proiect, eroare de autentificare, încărcare avatar, actualizare diplomă) trebuie să declanșeze o formă de feedback vizual: fie un mesaj tip Toast în colțul ecranului, fie un modal de confirmare sau un indicator de loading inline. Nicio acțiune nu rămâne neconfirmată.
-* **Accesibilitate Nativă (a11y & Contrast):** Toate combinațiile de culoare text/fundal trebuie să respecte standardul WCAG AA (contrast minim 4.5:1 pentru text normal). Focusul din tastatură este marcat clar printr-un inel vizibil (`focus-visible:ring-2`), asigurând o navigare logică fără mouse.
+* **Minimalism Premium (Function over Decoration):** Fiecare pixel are o opțiune funcțională clară. Se folosesc spații albe generoase (whitespace/negative space) pentru a separa ideile, colțuri rotunjite uniform (`rounded-lg` și `rounded-xl`) și umbre milimetrice (`shadow-xs`, `shadow-sm`) pentru elevație. Nu folosim ornamente vizuale fără scop (fără forme geometrice plutitoare sau gradiente de fundal ostentative).
+* **Fără „AI Slop”:** Este interzisă utilizarea chenarelor groase sau supradimensionate, a fundalurilor negre opace fără adâncime în dark mode, precum și a combinării haotice de fonturi. Interfața trebuie să aibă densitatea informațională a unui instrument profesional (pro-tool density), optimizată pentru utilizare zilnică.
+* **Consistență Arhitecturală (Single Design Language):** Orice tabel, card de dashboard, formular de autentificare sau modal de confirmare va moșteni aceleași clase Tailwind fundamentale. Butoanele principale au înălțimi fixe (`h-9` / `h-10`), padding-uri armonizate și micro-animații identice la hover/active pe parcursul întregului proiect.
+* **Obsesia pentru Feedback-ul Imediat (Micro-Reassurance):** Orice acțiune (salvare profil, generare CV cu AI, ștergere proiect, înregistrare la eveniment, încărcare avatar) trebuie să ofere feedback vizual instanțiat: stare de loading în buton, efecte de skeleton, toast-uri discrete sau modale de confirmare cu fundal blurat (`backdrop-blur-md`).
+* **Accesibilitate Nativă (a11y & Contrast):** Combinațiile de culori respectă standardul WCAG AA (contrast minim 4.5:1). Starea de focus din tastatură este vizibilă clar (`focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2`).
 
 ---
 
 ## 2. Paleta de Culori (Color Palette - Tailwind CSS v4.0 Variables)
 
-Arhitectura culorilor utilizează token-uri semantice bazate pe nuanțele moderne **Slate** și **Indigo** din Tailwind CSS. Nu se apelează niciodată coduri HEX fixe în clasele componentelor, ci variabilele semantice aferente temei.
+Arhitectura culorilor integrează nuanțele consacrate EduLink (Deep Ocean Teal) cu o structură neutră bazată pe **Slate**. În Tailwind CSS v4.0, definim token-urile semantice direct în fișierul global de CSS prin `@theme`.
 
-### Light Mode (Curat, Strălucitor, Academic)
+### Culorile de Brand EduLink (Custom Palette)
 
-* **Fundal principal (`bg-background`):** `#f8fafc` (`slate-50`) – Oferă o bază caldă, nestresantă pentru ochi în utilizare îndelungată.
-* **Suprafețe / Carduri (`bg-card`):** `#ffffff` (Alb pur) – Crează un contrast subtil de elevație față de fundalul principal.
-* **Text Principal (`text-foreground`):** `#0f172a` (`slate-900`) – Lizibilitate maximă și contrast impecabil.
-* **Text Secundar / Descrieri (`text-muted-foreground`):** `#64748b` (`slate-500`) – Folosit pentru date calendaristice, metadate și bio-uri scurte.
-* **Borduri și Separatori (`border-border`):** `#e2e8f0` (`slate-200`) – Chenare fine de maxim `1px`.
-* **Accent Brand (`bg-primary` / `text-primary`):** `#4f46e5` (`indigo-600`) – Albastru academic/tehnologic profund, utilizat exclusiv pentru acțiunile principale (CTA) și elementele interactive cheie.
+* **Brand 950 (Deep Teal):** `#003747` `rgb(0, 55, 71)` — Fundaluri întunecate premium / Accent extrem.
+* **Brand 900 (Dark Teal):** `#065465` `rgb(6, 84, 101)` — Suprafețe Dark Mode secundare / Borduri active.
+* **Brand 800 (Teal Medium):** `#046276` `rgb(4, 98, 118)` — Stări de Hover în Dark Mode.
+* **Brand 700 (Teal Primary):** `#026a81` `rgb(2, 106, 129)` — Accent principal Light Mode / Element activ.
+* **Brand 600 (Teal Bright):** `#06768d` `rgb(6, 118, 141)` — Accent principal Dark Mode / Highlights.
 
-### Dark Mode (Profound, Mat, Linear-Style)
+### Configurația `@theme` pentru Tailwind CSS v4.0 (`globals.css`)
 
-* *Regulă:* Este interzisă utilizarea negru-lui mat 100% (`#000000`) pentru suprafețele mari, deoarece obosește vederea și elimină adâncimea interfeței.
-* **Fundal principal (`bg-background`):** `#020617` (`slate-950`) – Negru ardezie profund.
-* **Suprafețe / Carduri (`bg-card` / `bg-muted`):** `#0f172a` (`slate-900`) pentru carduri și `#1e293b` (`slate-800`) pentru elemente secundare (de exemplu, input-uri sau drop-down-uri).
-* **Text Principal (`text-foreground`):** `#f8fafc` (`slate-50`).
-* **Text Secundar (`text-muted-foreground`):** `#94a3b8` (`slate-400`).
-* **Borduri și Separatori (`border-border`):** `#1e293b` (`slate-800`) – Contururi subtile care delimitează elementele fără a încărca vizual.
-* **Accent Brand (`bg-primary`):** `#6366f1` (`indigo-500`) – O nuanță ușor mai deschisă decât în Light Mode pentru a menține luminozitatea optimă pe fundal întunecat.
+```css
+@import "tailwindcss";
 
-### Culori Semantice pentru Feedback (Toate Modurile)
+@layer base {
+  :root {
+    --background: #f8fafc; /* slate-50 */
+    --foreground: #0f172a; /* slate-900 */
 
-* **Succes (`emerald`):** `#10b981` (`emerald-500`) – Bife de verificare diplomă, confirmări de salvare, status online.
-* **Avertizare (`amber`):** `#f59e0b` (`amber-500`) – Acțiuni care necesită atenție, abonamente aproape de expirare.
-* **Eroare / Distructiv (`rose`):** `#e11d48` (`rose-600`) – Ștergeri de date, erori de validare formulare, eșec la autentificare.
-* **Informație (`sky`):** `#0ea5e9` (`sky-500`) – Tooltip-uri instructive, ghiduri de utilizare on-boarding.
+    --card: #ffffff;
+    --card-foreground: #0f172a;
 
----
+    --popover: #ffffff;
+    --popover-foreground: #0f172a;
 
-## 3. Tipografie și Ierarhie Vizuală (Typography)
+    /* Primary Accent (EduLink Teal #026a81) */
+    --primary: #026a81;
+    --primary-hover: #046276;
+    --primary-foreground: #ffffff;
 
-Sistemul utilizează un singur font sans-serif geometric și modern: **Geist Sans** (preferabil, standardul Vercel) sau **Inter**. Scara tipografică este riguroasă, combinând corect dimensiunea fontului (`text-*`), greutatea (`font-*`), înălțimea liniei (`leading-*`) și spațierea între litere (`tracking-*`).
+    --secondary: #f1f5f9; /* slate-100 */
+    --secondary-foreground: #0f172a;
 
-```html
-<!-- H1: Titluri de Pagină Dashboard / Ecrane Principale -->
-<h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-foreground leading-tight">
+    --muted: #f1f5f9;
+    --muted-foreground: #64748b; /* slate-500 */
+
+    --border: #e2e8f0; /* slate-200 */
+    --input: #e2e8f0;
+
+    --ring: #026a81;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: #020617; /* slate-950 */
+    --foreground: #f8fafc; /* slate-50 */
+
+    --card: #003747; /* Deep Ocean Teal Slate */
+    --card-foreground: #f8fafc;
+
+    --popover: #065465;
+    --popover-foreground: #f8fafc;
+
+    /* Primary Accent în Dark Mode (#06768d) */
+    --primary: #06768d;
+    --primary-hover: #026a81;
+    --primary-foreground: #ffffff;
+
+    --secondary: #065465;
+    --secondary-foreground: #f8fafc;
+
+    --muted: #065465;
+    --muted-foreground: #94a3b8; /* slate-400 */
+
+    --border: #065465;
+    --input: #065465;
+
+    --ring: #06768d;
+  }
+}
+
+/* Semantics pentru Feedback */
+.status-success { color: #10b981; bg: #ecfdf5; }
+.status-warning { color: #f59e0b; bg: #fffbeb; }
+.status-error   { color: #e11d48; bg: #fff1f2; }
+.status-info    { color: #0ea5e9; bg: #f0f9ff; }
+
+
+3. Tipografie și Ierarhie Vizuală (Typography)
+Se utilizează fontul Geist Sans sau Inter. Textul trebuie structurat clar, respectând scara de dimensiuni, greutăți și spațieri.
+
+HTML
+<!-- H1: Titlu de Pagină Dashboard / Ecrane Principale -->
+<h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50 leading-tight">
   Panoul General EduLink
 </h1>
 
-<!-- H2: Titluri de Carduri, Secțiuni și Modale -->
-<h2 class="text-lg sm:text-xl font-semibold tracking-normal text-foreground leading-snug">
-  Experiență Profesională
+<!-- H2: Titlu de Card, Secțiune sau Modal -->
+<h2 class="text-lg sm:text-xl font-semibold tracking-normal text-slate-900 dark:text-slate-100 leading-snug">
+  Experiență Profesională & Proiecte
 </h2>
 
-<!-- H3: Sub-secțiuni sau Titluri de Elemente Mărunte (ex. Nume Proiect în Grid) -->
-<h3 class="text-base font-medium text-foreground leading-normal">
-  Platformă AI de Recrutare
+<!-- H3: Sub-secțiuni sau Nume de Proiecte în Grid -->
+<h3 class="text-base font-medium text-slate-900 dark:text-slate-100 leading-normal">
+  Sistem de Management cu Interfață Desktop
 </h3>
 
-<!-- Body Normal: Descrieri, Paragrafe de text, Detalii Job -->
-<p class="text-sm font-normal text-muted-foreground leading-relaxed">
-  Am implementat o arhitectură bazată pe microservicii și integrare automată cu API-uri de inteligență artificială.
+<!-- Body Normal: Descrieri, Paragrafe, Text Proiecte -->
+<p class="text-sm font-normal text-slate-500 dark:text-slate-400 leading-relaxed">
+  Dezvoltat în C# cu Avalonia și MySQL, integrat cu scanare automată de coduri de bare.
 </p>
 
-<!-- Label / Small: Etichete de input, statusuri, date calendaristice -->
+<!-- Label / Small: Subtitluri, Metadate, Statusuri -->
 <span class="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
-  12 Octombrie 2026 • Verificat de Universitate
+  29 Iulie 2026 • Verificat de Universitate
 </span>
 
-<!-- Monospace: Coduri QR Slugs, ID-uri unice, coduri promoționale -->
-<code class="font-mono text-xs bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
-  /portofoliu/alex-popescu-2026
+<!-- Monospace: Slugs, ID-uri unice, Căi de sistem -->
+<code class="font-mono text-xs bg-slate-100 dark:bg-slate-800 text-[#026a81] dark:text-[#06768d] px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+  /portofoliu/student-dev-2026
 </code>
-
-
 4. Ghidul Componentelor UI Core (UI Component Blueprint)
-Subagenții AI trebuie să folosească strict aceste combinații de clase pentru componentele interfeței. Nu se improvizează cu padding-uri sau raze de curbură diferite (rounded-xl este standardul pentru carduri, rounded-lg pentru butoane și input-uri).
-
 A. Butoane (Buttons)
-Fiecare buton are o stare de repaus, hover, focus vizibil pentru accesibilitate, o animație subtilă de apăsare (active:scale-[0.98]) și o stare de dezactivare clară.
+Toate butoanele includ tranziții fluide, stare de hover, focus vizibil și feedback vizual la apăsare (active:scale-[0.98]).
 
 HTML
-<!-- 1. Buton Principal (Primary Action - ex. "Generează CV", "Salvează Profilul") -->
-<button class="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all duration-150 hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-600 dark:focus-visible:ring-offset-slate-950">
-  <LucideIcon class="h-4 w-4"/>
+<!-- 1. Buton Principal (Primary Action) -->
+<button class="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#026a81] px-4 text-sm font-medium text-white shadow-xs transition-all hover:bg-[#046276] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#026a81] focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 dark:bg-[#06768d] dark:hover:bg-[#026a81]">
+  <LucideIcon class="h-4 w-4" name="Sparkles"/>
   <span>Generează CV cu AI</span>
 </button>
 
-<!-- 2. Buton Secundar (Secondary Action - ex. "Anulează", "Editează", "Vezi Portofoliu") -->
-<button class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm transition-all duration-150 hover:bg-slate-50 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800 dark:hover:text-white dark:focus-visible:ring-offset-slate-950">
-  <span>Preview Portofoliu</span>
+<!-- 2. Buton Secundar (Secondary Action) -->
+<button class="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-900 shadow-xs transition-all hover:bg-slate-50 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 dark:border-[#065465] dark:bg-[#003747] dark:text-slate-100 dark:hover:bg-[#065465]">
+  <LucideIcon class="h-4 w-4" name="ExternalLink"/>
+  <span>Afișează Portofoliu</span>
 </button>
 
-<!-- 3. Buton Distructiv (Destructive Action - ex. "Șterge Proiect", "Revocă Accesul") -->
-<button class="inline-flex items-center justify-center gap-2 rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all duration-150 hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-600 focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 dark:hover:bg-rose-500 dark:focus-visible:ring-offset-slate-950">
-  <span>Șterge Definitiv</span>
+<!-- 3. Buton Distructiv (Destructive Action) -->
+<button class="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-rose-600 px-4 text-sm font-medium text-white shadow-xs transition-all hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-600 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 dark:bg-rose-600 dark:hover:bg-rose-500">
+  <LucideIcon class="h-4 w-4" name="Trash2"/>
+  <span>Șterge Proiect</span>
+</button>
+
+<!-- 4. Buton Ghost / Icon Button -->
+<button class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#026a81] dark:text-slate-400 dark:hover:bg-[#065465] dark:hover:text-slate-100">
+  <LucideIcon class="h-5 w-5" name="MoreHorizontal"/>
 </button>
 B. Câmpuri de Input și Formulare (Form Fields)
-Formularele aerisite și clare sunt vitale. Chenarul își schimbă culoarea și capătă un inel subtil de focus la interacțiune, fără a mișca elementele din jur (layout shift zero).
+Formularele nu își schimbă dimensiunea la focus (zero layout shift).
 
 HTML
 <div class="flex flex-col gap-1.5 w-full">
-  <label for="headline" class="text-xs font-medium text-foreground">
-    Titlu Profesional (Headline) <span class="text-rose-500">*</span>
+  <label for="title" class="text-xs font-medium text-slate-900 dark:text-slate-100 flex items-center justify-between">
+    <span>Titlu Oportunitate / Job</span>
+    <span class="text-rose-500">*</span>
   </label>
-  <input 
-    type="text" 
-    id="headline" 
-    placeholder="ex: Student la Electronică & Telecomunicații | C++ & Embedded"
-    class="w-full rounded-lg border border-slate-200 bg-transparent px-3 py-2 text-sm text-foreground shadow-xs placeholder:text-slate-400 transition-colors focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:placeholder:text-slate-500 dark:focus:border-indigo-500 dark:focus:ring-indigo-500/20"
-  />
-  <span class="text-[11px] text-muted-foreground">
-    Acest titlu va apărea sub numele tău pe portofoliul digital și în căutările HR.
-  </span>
+  <div class="relative">
+    <input 
+      type="text" 
+      id="title" 
+      placeholder="ex: Junior C# / Avalonia Developer"
+      class="w-full h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-xs placeholder:text-slate-400 transition-colors focus:border-[#026a81] focus:outline-none focus:ring-2 focus:ring-[#026a81]/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#065465] dark:bg-[#003747] dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-[#06768d] dark:focus:ring-[#06768d]/20"
+    />
+  </div>
+  <p class="text-[11px] text-slate-500 dark:text-slate-400">
+    Se alimentează din sugestiile locale `mockData.ts` sau permite introducerea liberă.
+  </p>
 </div>
-C. Carduri Element (Dashboard Cards)
-Cardurile structurează secțiunile din dashboard (Proiecte, Educație, Analytics). Acestea utilizează o bordură fină, fundal curat și o umbră discretă care se amplifică ușor la hover doar pe cardurile interactive.
-
+C. Carduri de Dashboard (Dashboard Cards)
 HTML
-<div class="group relative rounded-xl border border-slate-200 bg-white p-6 shadow-xs transition-all duration-200 hover:border-slate-300 hover:shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700">
+<div class="group relative rounded-xl border border-slate-200 bg-white p-6 shadow-xs transition-all duration-200 hover:border-slate-300 hover:shadow-sm dark:border-[#065465] dark:bg-[#003747] dark:hover:border-[#026a81]">
   <div class="flex items-start justify-between gap-4">
     <div class="space-y-1">
-      <h3 class="text-base font-semibold text-foreground group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-        Platformă e-Commerce full-stack
-      </h3>
-      <p class="text-sm text-muted-foreground line-clamp-2">
-        Proiect de diplomă dezvoltat cu Next.js, Stripe și Supabase. Include panou de administrare și autentificare securizată.
+      <div class="flex items-center gap-2">
+        <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100 group-hover:text-[#026a81] dark:group-hover:text-[#06768d] transition-colors">
+          Aplicație Gestiune Stocuri (Desktop)
+        </h3>
+      </div>
+      <p class="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
+        Proiect dezvoltat în C# cu interfață Avalonia, bază de date MySQL și modul integrat de scanare coduri QR.
       </p>
     </div>
-    <span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-950/50 dark:text-emerald-400 dark:ring-emerald-500/20">
-      Verificat
+    <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-950/50 dark:text-emerald-400 dark:ring-emerald-500/20 shrink-0">
+      Verificat Academic
     </span>
   </div>
 </div>
-D. Avatar & File Uploaders (Drag-and-Drop Zones)
-Pentru încărcarea pozelor de profil sau a diplomelor PDF în Supabase Storage, interfața oferă o zonă de drop prietenoasă vizual, cu feedback imediat când un fișier este tras deasupra ei (drag-over).
-
+D. Zone de Înregistrare & Dropzone (File Uploaders)
 HTML
-<div class="relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/50 p-6 text-center transition-all duration-150 hover:border-indigo-500 hover:bg-slate-100/50 cursor-pointer dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-indigo-500 dark:hover:bg-slate-800/50">
-  <div class="rounded-full bg-slate-100 p-3 text-slate-600 shadow-xs dark:bg-slate-800 dark:text-slate-400">
-    <!-- Lucide Icon: UploadCloud sau FileText -->
-    <svg class="h-6 w-6 text-indigo-600 dark:text-indigo-400" ... />
+<div class="relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/50 p-6 text-center transition-all duration-150 hover:border-[#026a81] hover:bg-slate-100/50 cursor-pointer dark:border-[#065465] dark:bg-[#003747]/50 dark:hover:border-[#06768d]">
+  <div class="rounded-full bg-slate-100 p-3 text-slate-600 shadow-xs dark:bg-[#065465] dark:text-slate-300">
+    <LucideIcon class="h-6 w-6 text-[#026a81] dark:text-[#06768d]" name="UploadCloud"/>
   </div>
-  <p class="mt-3 text-sm font-medium text-foreground">
-    <span class="text-indigo-600 dark:text-indigo-400 hover:underline">Apasă pentru a încărca</span> sau trage documentul PDF aici
+  <p class="mt-3 text-sm font-medium text-slate-900 dark:text-slate-100">
+    <span class="text-[#026a81] dark:text-[#06768d] hover:underline">Selectează un fișier PDF</span> sau trage documentul aici
   </p>
-  <p class="mt-1 text-xs text-muted-foreground">
-    Dimensiune maximă: 10 MB. Formate acceptate: PDF, PNG, JPG.
+  <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+    Documente de practică, adeverințe sau diplomă (Max 10 MB)
   </p>
 </div>
 5. Micro-Interacțiuni, Stări și Feedback (UI States)
-Niciun apel către API-urile externe (OpenAI, Supabase, Stripe, Google Calendar) sau acțiune CRUD nu se execută silențios.
-
-A. Stări de Încărcare (Loading States & Skeletons)
-Butoane în execuție: În momentul trimiterii unui formular, butonul trece automat în starea disabled, textul se schimbă (ex. din „Salvează” în „Se salvează...”), iar o iconiță Lucide Loader2 este randată cu clasa animate-spin.
-
-Skeletons pentru încărcarea paginilor: Înainte de primirea datelor din PostgreSQL, structura paginii este simulată prin blocuri gri animate, menținând layout-ul exact al componentelor finale (Zero Layout Shift).
+A. Stări de Încărcare (Skeletons & Spinners)
+Butoanele aflate în execuție afișează o iconiță rotativă animate-spin și își dezactivează interacțiunea:
 
 HTML
-<!-- Componentă Skeleton de Card -->
-<div class="rounded-xl border border-slate-200 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900 animate-pulse space-y-4">
-  <div class="h-5 bg-slate-200 dark:bg-slate-800 rounded-md w-1/3"></div>
+<button disabled class="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#026a81]/80 px-4 text-sm font-medium text-white opacity-80 cursor-not-allowed">
+  <LucideIcon class="h-4 w-4 animate-spin" name="Loader2"/>
+  <span>Se salvează datele...</span>
+</button>
+Structurile de date în curs de încărcare utilizează blocurile animate Skeleton:
+
+HTML
+<div class="rounded-xl border border-slate-200 bg-white p-6 shadow-xs dark:border-[#065465] dark:bg-[#003747] animate-pulse space-y-4">
+  <div class="h-5 bg-slate-200 dark:bg-[#065465] rounded-md w-1/3"></div>
   <div class="space-y-2">
-    <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded-md w-full"></div>
-    <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded-md w-4/5"></div>
+    <div class="h-4 bg-slate-200 dark:bg-[#065465] rounded-md w-full"></div>
+    <div class="h-4 bg-slate-200 dark:bg-[#065465] rounded-md w-4/5"></div>
   </div>
 </div>
-B. Modale de Confirmare și Avertizare (Dialogs / Modals)
-Orice acțiune cu impact distructiv (ștergerea unui proiect, revocarea bifei de către o universitate, anularea abonamentului) declanșează un Modal Block deschis pe ecran, având pe fundal un efect de blur.
-
-Fundal Modal (Backdrop): fixed inset-0 z-50 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in
-
-Container Modal: fixed left-[50%] top-[50%] z-50 w-full max-w-lg translate-x-[-50%] translate-y-[-50%] rounded-xl border border-slate-200 bg-white p-6 shadow-lg duration-200 animate-in zoom-in-95 dark:border-slate-800 dark:bg-slate-900
-
-Structură Butoane Modal: Butonul de anulare (Secondary, dreapta/stânga jos) alături de butonul de acțiune principală (Destructive Roșu pentru ștergere sau Primary Indigo pentru confirmare modificări majore).
-
-C. Sistemul de Mesaje Toast (Feedback Imediat)
-Pentru acțiunile generale care nu necesită întreruperea fluxului (salvare date profil, copiere link portofoliu în clipboard, eroare de rețea ușoară), se afișează o notificare de tip Toast în colțul din dreapta-jos sau dreapta-sus al ecranului (folosind sonner sau shadcn/ui toast).
+B. Modale de Confirmare (Dialogs)
+Modalele folosesc o poziționare fixă, centrare pe ambele axe și fundal cu efect de estompare (backdrop-blur-xs).
 
 HTML
-<!-- Toast Succes (ex: "Proiectul a fost salvat cu succes.") -->
-<div class="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-900 shadow-md dark:border-emerald-900/50 dark:bg-emerald-950 dark:text-emerald-200">
-  <!-- Lucide Icon: CheckCircle2 -->
-  <svg class="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" ... />
-  <div class="text-sm font-medium">Datele profilului au fost actualizate.</div>
-</div>
+<!-- Modal Backdrop -->
+<div class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs transition-opacity animate-in fade-in"></div>
 
-<!-- Toast Eroare (ex: "Eroare la logare: Parolă incorectă.") -->
-<div class="flex items-center gap-3 rounded-lg border border-rose-200 bg-rose-50 p-4 text-rose-900 shadow-md dark:border-rose-900/50 dark:bg-rose-950 dark:text-rose-200">
-  <!-- Lucide Icon: AlertCircle -->
-  <svg class="h-5 w-5 text-rose-600 dark:text-rose-400 shrink-0" ... />
-  <div class="text-sm font-medium">Eroare la autentificare: Datele introduse sunt incorecte.</div>
+<!-- Modal Content Container -->
+<div class="fixed left-[50%] top-[50%] z-50 w-full max-w-lg translate-x-[-50%] translate-y-[-50%] rounded-xl border border-slate-200 bg-white p-6 shadow-xl duration-200 animate-in zoom-in-95 dark:border-[#065465] dark:bg-[#003747]">
+  <div class="flex flex-col gap-2">
+    <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Confirmi publicarea proiectului?</h2>
+    <p class="text-sm text-slate-500 dark:text-slate-400">
+      Acest proiect va deveni vizibil imediat pentru universități și companiile partenere în secțiunea de recrutare.
+    </p>
+  </div>
+  <div class="mt-6 flex justify-end gap-3">
+    <button class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-[#065465] dark:text-slate-300 dark:hover:bg-[#065465]">
+      Revino
+    </button>
+    <button class="rounded-lg bg-[#026a81] px-4 py-2 text-sm font-medium text-white hover:bg-[#046276] dark:bg-[#06768d]">
+      Publică Acum
+    </button>
+  </div>
+</div>
+C. Notificări Toast (Feedback Imediat)
+HTML
+<!-- Toast Succes -->
+<div class="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-900 shadow-md dark:border-emerald-900/50 dark:bg-emerald-950 dark:text-emerald-200">
+  <LucideIcon class="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" name="CheckCircle2"/>
+  <div class="text-sm font-medium">Evenimentul a fost adăugat cu succes în Google Calendar.</div>
 </div>
 6. Layout-ul Adaptiv (Responsive Grid & Navigation)
-Aplicația EduLink este complet adaptivă (Mobile-First approach), funcționând impecabil atât pe un telefon cu ecran mic, cât și pe un monitor de 27 inch.
-
-A. Structura Dashboard-ului (Hibrid LinkedIn + Linktree)
-Arhitectura panoului de control pentru Studenți, Instituții și Companii se bazează pe o dispunere pe 2 coloane principale pe Desktop, care colapsează nativ pe verticală în ecranele de mobil.
+A. Structura Dashboard-ului (Desktop-First cu Sidebar)
+Arhitectura panoului principal folosește o dispunere adaptivă cu sidebar fix pe desktop și meniu colapsabil pe dispozitive mobile.
 
 HTML
-<div class="min-h-screen bg-background flex flex-col md:flex-row">
+<div class="min-h-screen bg-[#f8fafc] dark:bg-[#020617] flex flex-col md:flex-row">
   
-  <!-- 1. Sidebar Navigare (Stânga - Fix pe Desktop, Sheet/Hamburger pe Mobil) -->
-  <aside class="w-full md:w-64 md:fixed md:inset-y-0 border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 z-30 flex flex-col justify-between p-4">
-    <!-- Logo & Meniu Principal -->
+  <!-- Sidebar Navigare -->
+  <aside class="w-full md:w-64 md:fixed md:inset-y-0 border-r border-slate-200 bg-white dark:border-[#065465] dark:bg-[#003747] z-30 flex flex-col justify-between p-4">
     <div class="space-y-6">
-      <div class="flex items-center gap-2 px-2 font-bold text-lg tracking-tight text-indigo-600 dark:text-indigo-400">
+      <!-- Logo EduLink -->
+      <div class="flex items-center gap-2 px-2 font-bold text-lg tracking-tight text-[#026a81] dark:text-[#06768d]">
         <LucideIcon class="h-6 w-6" name="GraduationCap"/>
         <span>EduLink</span>
       </div>
+      <!-- Navigare -->
       <nav class="space-y-1">
-        <!-- Item Navigare Activ -->
-        <a href="/dashboard" class="flex items-center gap-3 rounded-lg bg-slate-100 px-3 py-2 text-sm font-medium text-slate-900 dark:bg-slate-800 dark:text-slate-100">
-          <LucideIcon class="h-4 w-4 text-indigo-600 dark:text-indigo-400" name="LayoutDashboard"/>
-          <span>Panou de Control</span>
+        <a href="/dashboard" class="flex items-center gap-3 rounded-lg bg-slate-100 px-3 py-2 text-sm font-medium text-slate-900 dark:bg-[#065465] dark:text-slate-100">
+          <LucideIcon class="h-4 w-4 text-[#026a81] dark:text-[#06768d]" name="LayoutDashboard"/>
+          <span>Panou Principal</span>
         </a>
-        <!-- Item Navigare Normal -->
-        <a href="/dashboard/projects" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-100">
-          <LucideIcon class="h-4 w-4" name="FolderGit2"/>
-          <span>Proiecte & Portofoliu</span>
+        <a href="/dashboard/jobs" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-[#065465] dark:hover:text-slate-100">
+          <LucideIcon class="h-4 w-4" name="Briefcase"/>
+          <span>Oportunități & Joburi</span>
         </a>
       </nav>
     </div>
-    <!-- User Profile & Theme Toggle la Baza Sidebar-ului -->
-    <div class="border-t border-slate-200 dark:border-slate-800 pt-4 mt-auto">
-      <!-- User mini-card -->
-    </div>
   </aside>
 
-  <!-- 2. Zona de Conținut Principal (Main Content Area) -->
+  <!-- Zona de Conținut Principal -->
   <main class="flex-1 md:pl-64">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       
-      <!-- Antet Secțiune cu Buton CTA -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
+      <!-- Antet Secțiune -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-[#065465] pb-6">
         <div>
-          <h1 class="text-2xl font-bold text-foreground">Proiectele Tale</h1>
-          <p class="text-sm text-muted-foreground mt-1">Gestionează aplicațiile, codul și demo-urile pe care le expui recrutorilor.</p>
+          <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Oportunități Active</h1>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Explorează internship-urile și pozițiile disponibile.</p>
         </div>
-        <button class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-all shadow-xs">
-          <LucideIcon class="h-4 w-4" name="Plus"/>
-          <span>Adaugă Proiect Nou</span>
-        </button>
       </div>
 
-      <!-- Marketplace & Grid de Carduri Responsive -->
+      <!-- Grid Componente -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Dashboard / Job Cards sunt inserate aici -->
+        <!-- Carduri randerate dinamic -->
       </div>
 
     </div>
   </main>
 
 </div>
-B. Vizualizarea Portofoliului Public (/portofoliu/[slug])
-Această pagină publică este inspirată din estetica ultra-minimalistă Linktree, fiind concepută pentru a fi scanată rapid de pe telefonul unui recrutor HR sau deschisă prin scanarea codului QR la un eveniment de carieră.
+B. Portofoliul Public (/portofoliu/[slug])
+Layout-ul public este optimizat pentru vizualizare mobilă (Linktree-style minimal):
 
-Layout: Centrat vertical și orizontal pe un singur stâlp (max-w-md mx-auto py-12 px-4 text-center).
+Centrare Executivă: Stâlp unic pe mijloc (max-w-md mx-auto py-12 px-4 text-center).
 
-Header Profil: Avatar generos cu contur fin (w-24 h-24 rounded-full mx-auto border-2 border-indigo-600/20 shadow-sm), urmat de Numele Complet (H1), Titlu Profesional și Bifa de Verificare Academică din partea Universității.
+Header Profil: Avatar generos (w-24 h-24 rounded-full border-2 border-[#026a81]/30 shadow-xs mx-auto), urmat de Nume, Titlu profesional și Bifa de Verificare Academică.
 
-Stiva de Oportunități (Linktree Buttons Stack): O listă verticală de butoane late (w-full py-3 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs hover:scale-[1.02] hover:border-indigo-500 transition-all flex items-center justify-between font-medium), care trimit către: CV-ul generat AI (PDF), Profilul de LinkedIn, Repozitoriul GitHub, Live Demo-uri ale proiectelor și buton direct de „Contactează Studentul”.
+Stivă de Link-uri (Interactive Buttons Stack): Lista de acțiuni direct accesibile (CV PDF generat AI, Proiect Desktop Avalonia, Repozitoriu GitHub, Contact Direct).
 
-QR Code Section: În subsolul portofoliului, se afișează un buton discret „Arată Codul QR pentru scanare rapidă”, care extinde un panou curat conținând codul vectorial de înaltă precizie generat local de aplicație.
+Zona Cod QR: În subsolul paginii, afișarea unui buton minimalist care deschide codul QR vectorial pentru scanare la standurile de recrutare sau evenimente.
