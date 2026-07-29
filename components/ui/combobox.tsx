@@ -36,10 +36,6 @@ export function Combobox({
   const containerRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    setQuery(value);
-  }, [value]);
-
-  React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
         containerRef.current &&
@@ -65,20 +61,23 @@ export function Combobox({
 
   function selectOption(label: string) {
     onChange(label);
-    setQuery(label);
     setOpen(false);
   }
 
   return (
     <div ref={containerRef} className={cn("relative w-full", className)}>
       <Input
-        value={query}
+        value={open ? query : value}
         onChange={(e) => {
-          setQuery(e.target.value);
+          const nextValue = e.target.value;
+          setQuery(nextValue);
           setOpen(true);
-          if (creatable) onChange(e.target.value);
+          if (creatable) onChange(nextValue);
         }}
-        onFocus={() => setOpen(true)}
+        onFocus={() => {
+          setQuery(value);
+          setOpen(true);
+        }}
         placeholder={placeholder}
         disabled={disabled}
         autoComplete="off"
