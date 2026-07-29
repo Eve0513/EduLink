@@ -12,7 +12,6 @@
 * **Bază de date & Auth:** Supabase Cloud (PostgreSQL 16+) cu Row Level Security (RLS) strict activat, triggers automatizați și indici optimizați pe Foreign Keys și coloanele de filtrare.
 * **Integrări API Externe:** 
   * **OpenAI API:** Modelul `gpt-4o-mini` (pentru microserviciile AI de analiză ATS și generare CV).
-  * **Stripe API:** Checkout & Webhooks pentru gestionarea abonamentelor de plată (Company Pro / Student Pro).
   * **Google Calendar API:** OAuth 2.0 pentru sincronizarea evenimentelor academice și interviurilor.
   * **Hipolabs Universities API:** API REST public pentru completarea automată (*autocomplete*) a numelor instituțiilor de învățământ.
 * **Mediu Local & DevOps:** Găzduire locală pe discul `E:\project\edulink` (sistem Windows / PowerShell), versionare Git prin GitHub, CI/CD și deployment automat prin **Vercel (Production Ready)**. Cursor IDE utilizează servere MCP (Model Context Protocol) pentru interogarea structurii bazei de date în timp real.
