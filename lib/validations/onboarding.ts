@@ -1,0 +1,54 @@
+import { z } from "zod";
+
+export const contactStepSchema = z.object({
+  fullName: z.string().min(2, "Numele este obligatoriu"),
+  headline: z.string().min(3, "Titlul profesional este obligatoriu"),
+  bio: z.string().max(500, "Bio nu poate depăși 500 caractere").optional(),
+  location: z.string().min(2, "Locația este obligatorie"),
+  avatarUrl: z.string().nullable().optional(),
+});
+
+export const educationStepSchema = z.object({
+  institution_name: z.string().min(2, "Instituția este obligatorie"),
+  degree: z.enum(["Licenta", "Master", "Doctorat", "Bacalaureat"]),
+  field_of_study: z.string().min(2, "Domeniul de studiu este obligatoriu"),
+  start_date: z.string().min(1, "Data de început este obligatorie"),
+  end_date: z.string().nullable().optional(),
+  is_current: z.boolean().default(false),
+  gpa: z
+    .number()
+    .min(1, "Media minimă este 1.00")
+    .max(10, "Media maximă este 10.00")
+    .nullable()
+    .optional(),
+});
+
+export const experienceStepSchema = z.object({
+  company_name: z.string().min(2, "Compania este obligatorie"),
+  position_title: z.string().min(2, "Titlul postului este obligatoriu"),
+  location: z.string().optional(),
+  start_date: z.string().min(1, "Data de început este obligatorie"),
+  end_date: z.string().nullable().optional(),
+  is_current: z.boolean().default(false),
+  description: z.string().optional(),
+});
+
+export const skillStepSchema = z.object({
+  name: z.string().min(2, "Numele competenței este obligatoriu"),
+  level: z.enum(["Începător", "Avansat", "Expert"]),
+});
+
+export const projectStepSchema = z.object({
+  title: z.string().min(2, "Titlul proiectului este obligatoriu"),
+  description: z.string().optional(),
+  github_url: z.string().url("URL GitHub invalid").nullable().optional(),
+  live_demo_url: z.string().url("URL demo invalid").nullable().optional(),
+  technologies: z.array(z.string()).default([]),
+  image_url: z.string().nullable().optional(),
+});
+
+export type ContactStepData = z.infer<typeof contactStepSchema>;
+export type EducationStepData = z.infer<typeof educationStepSchema>;
+export type ExperienceStepData = z.infer<typeof experienceStepSchema>;
+export type SkillStepData = z.infer<typeof skillStepSchema>;
+export type ProjectStepData = z.infer<typeof projectStepSchema>;

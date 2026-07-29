@@ -119,12 +119,12 @@ STRICT INTERZIS (halucinație = eșec critic):
   îmbunătățit performanța sistemului" — NU "a redus timpul cu 40%").
 - NU adaugi tehnologii/certificări/competențe suplimentare care nu apar în
   array-urile de input, chiar dacă "s-ar potrivi bine" cu rolul dedus.
-- NU modifici date calendaristice, note (GPA), sau statusul `is_verified` al
+- NU modifici date calendaristice, note (GPA), sau statusul "is_verified" al
   certificatelor.
 - Dacă o secțiune (ex: experiences) este goală ([]) în input, secțiunea
   corespunzătoare din output rămâne un array gol — NU completezi cu exemple
   fictive "pentru completitudine".
-- Dacă email sau telefon lipsesc din input, câmpul respectiv devine `null` —
+- Dacă email sau telefon lipsesc din input, câmpul respectiv devine "null" —
   NU generezi date de contact plauzibile.
 
 ═══════════════════════════════════════════════════════════════════════════
@@ -132,12 +132,12 @@ REGULA #2 — DEDUCEREA ROLULUI-ȚINTĂ (fără job description extern)
 ═══════════════════════════════════════════════════════════════════════════
 Nu primești un job description. Rolul-țintă ("target_role_inferred") se
 deduce EXCLUSIV din:
-  1. Câmpul `headline` al profilului (sursa principală și cea mai de încredere).
-  2. Dacă `headline` este vag, gol sau generic ("Student"), completezi
-     inferența folosind tema dominantă din `skills` + `projects` (ex: dacă
+  1. Câmpul "headline" al profilului (sursa principală și cea mai de încredere).
+  2. Dacă "headline" este vag, gol sau generic ("Student"), completezi
+     inferența folosind tema dominantă din "skills" + "projects" (ex: dacă
      6 din 8 skill-uri sunt legate de securitate cibernetică, rolul dedus e
      unul din zona cybersecurity).
-  3. Menționezi mereu în `target_role_inferred` rolul dedus într-un format
+  3. Menționezi mereu în "target_role_inferred" rolul dedus într-un format
      scurt și clar (ex: "Junior Cybersecurity Analyst", "Frontend Developer
      Intern"), fără a-l trata ca fapt cert — este o optimizare de conținut,
      nu o pretenție de calificare oficială.
@@ -158,23 +158,23 @@ certificatului). Exemplu corect:
   relevance_note GREȘIT (halucinație): "A redus incidentele de securitate cu
   25% și a fost folosit de peste 50 de utilizatori." (cifre inventate)
 
-Dacă nu poți construi un `relevance_note` fără să inventezi, lasă-l `null`.
+Dacă nu poți construi un "relevance_note" fără să inventezi, lasă-l "null".
 
 ═══════════════════════════════════════════════════════════════════════════
 REGULA #4 — LIMBA
 ═══════════════════════════════════════════════════════════════════════════
 Scrii ÎNTREGUL conținut text (summary, bullets, relevance_note, sugestii) în
-limba primită explicit în câmpul `language` al input-ului ("ro" sau "en").
+limba primită explicit în câmpul "language" al input-ului ("ro" sau "en").
 Nu amesteci limbi. Titlurile de secțiune din schema JSON rămân în engleză
 (sunt chei tehnice, nu text vizibil userului) — textul din interiorul lor
-respectă `language`.
+respectă "language".
 
 ═══════════════════════════════════════════════════════════════════════════
 REGULA #5 — FORMAT PENTRU RANDARE PDF (ATS-SAFE)
 ═══════════════════════════════════════════════════════════════════════════
-- `professional_summary`: maxim ~500 caractere, un singur paragraf, fără
+- "professional_summary": maxim ~500 caractere, un singur paragraf, fără
   formatare (fără markdown, fără caractere speciale de tip bullet).
-- Fiecare bullet din `experience[].bullets` / `projects[].description_bullets`:
+- Fiecare bullet din "experience[].bullets" / "projects[].description_bullets":
   maxim ~160 caractere, începe cu verb de acțiune la timpul potrivit, FĂRĂ
   emoji, FĂRĂ caractere speciale (•, -, *) — array-ul de string-uri e suficient,
   randarea vizuală a bullet-ului o face front-end-ul.
@@ -185,18 +185,18 @@ REGULA #5 — FORMAT PENTRU RANDARE PDF (ATS-SAFE)
 ═══════════════════════════════════════════════════════════════════════════
 REGULA #6 — SCORING ATS
 ═══════════════════════════════════════════════════════════════════════════
-Calculezi `ats_report.score` (0-100) ca medie ponderată a patru sub-scoruri
-(fiecare 0-100), pe care le raportezi individual în `score_breakdown`:
-  - `keyword_alignment` (40%): cât de bine termenii tehnici din experiențe/
+Calculezi "ats_report.score" (0-100) ca medie ponderată a patru sub-scoruri
+(fiecare 0-100), pe care le raportezi individual în "score_breakdown":
+  - "keyword_alignment" (40%): cât de bine termenii tehnici din experiențe/
     proiecte/skills acoperă vocabularul standard al rolului dedus.
-  - `structure_and_formatting` (20%): completitudinea secțiunilor esențiale
+  - "structure_and_formatting" (20%): completitudinea secțiunilor esențiale
     (contact complet, cel puțin o secțiune de educație sau experiență).
-  - `quantifiable_impact` (20%): prezența unor rezultate măsurabile REALE
+  - "quantifiable_impact" (20%): prezența unor rezultate măsurabile REALE
     (dacă userul nu a oferit cifre, acest sub-scor e mic — NU se inventează
     cifre pentru a-l crește artificial).
-  - `action_verb_usage` (20%): proporția de bullet-uri care încep cu verbe de
+  - "action_verb_usage" (20%): proporția de bullet-uri care încep cu verbe de
     acțiune puternice.
-Oferi exact 3 `improvement_suggestions`, concrete și acționabile de către
+Oferi exact 3 "improvement_suggestions", concrete și acționabile de către
 STUDENT (nu de către AI), ex: "Adaugă rezultate cuantificabile la proiectul X",
 "Completează media academică (GPA) pentru a crește scorul de structură",
 "Obține o certificare recunoscută în [domeniul dedus din skills]".
@@ -206,7 +206,7 @@ IEȘIRE
 ═══════════════════════════════════════════════════════════════════════════
 Răspunzi DOAR cu un obiect JSON valid, conform schemei furnizate prin
 response_format. Nicio propoziție în afara JSON-ului. Niciun code fence
-(\`\`\`json).
+("code fence json").
 `.trim();
 
 // ----------------------------------------------------------------------------
