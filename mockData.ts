@@ -155,3 +155,39 @@ export const MOCK_JOB_TITLES: JobTitleItem[] = [
   { id: "job-29", name: "Administrator Hotel", category: "Medical, Educație și Horeca" },
   { id: "job-30", name: "Profesor / Învățător", category: "Medical, Educație și Horeca" }
 ];
+
+export const HIGH_SCHOOL_PROFILES: MockItem[] = [
+  { id: "real", name: "Profil Real" },
+  { id: "uman", name: "Profil Umanist" },
+  { id: "arte", name: "Profil Arte" },
+  { id: "sport", name: "Profil Sport" },
+  { id: "tehnologic", name: "Profil Tehnologic" },
+];
+
+export const INSTITUTION_ROLES: MockItem[] = [
+  { id: "rector", name: "Rector / Director" },
+  { id: "decan", name: "Decan" },
+  { id: "coordonator", name: "Coordonator cariera" },
+  { id: "profesor", name: "Profesor / Cadru didactic" },
+  { id: "administrator", name: "Administrator" },
+];
+
+export const MOCK_HIGH_SCHOOLS: MockItem[] = [
+  { id: "hs-1", name: "Liceul Teoretic Orizont" },
+  { id: "hs-2", name: "Liceul Teoretic Mihai Eminescu" },
+  { id: "hs-3", name: "Liceul Teoretic Spiru Haret" },
+  { id: "hs-4", name: "Liceul Academiei de Stiinte a Moldovei" },
+];
+
+export const EVENT_TYPE_LABELS: Record<string, string> = {
+  academic_lecture: "Prelegere academica",
+  workshop_training: "Workshop",
+  hackathon_contest: "Hackathon",
+  student_project: "Proiect studentesc",
+  career_fair: "Targ de cariera",
+  networking_meetup: "Networking",
+  volunteer_charity: "Voluntariat",
+  webinar_online: "Webinar",
+  sports_recreation: "Sport si recreere",
+  other: "Alt eveniment",
+};
