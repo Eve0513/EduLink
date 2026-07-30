@@ -95,6 +95,25 @@ export const HIGH_SCHOOL_PROFILES = [
   { id: "tehnologic", name: "Profil Tehnologic / Servicii" },
 ];
 
+export const INSTITUTION_ROLES = [
+  // Conducere Universitară & Școlară
+  { id: "rector_prorector", name: "Rector / Prorector" },
+  { id: "director_adjunct", name: "Director / Director Adjunct (Liceu / Colegiu)" },
+  { id: "decan_prodecan", name: "Decan / Prodecan" },
+  { id: "sef_catedra", name: "Șef Catedră / Șef Departament" },
+  
+  // Relații cu Studenții & Carieră (Cheie pentru EduLink)
+  { id: "coordonator_cariera", name: "Coordonator Centru de Carieră & Ghidare" },
+  { id: "responsabil_practica", name: "Responsabil Stagii de Practică & Parteneriate" },
+  { id: "consilier_scolar", name: "Consilier Școlar / Psihopedagog" },
+  
+  // Cadre Didactice & Administrativ
+  { id: "profesor_lector", name: "Profesor / Lector / Cadru Didactic" },
+  { id: "secretar_sef", name: "Secretar Șef / Secretariat Academic" },
+  { id: "admin_it", name: "Administrator IT / Sistem" },
+  { id: "altul", name: "Altă funcție administrativă" },
+];
+
 export const MOCK_COMPANIES: MockItem[] = [
   { id: "comp-1", name: "Orange Moldova" },
   { id: "comp-2", name: "Moldcell" },
