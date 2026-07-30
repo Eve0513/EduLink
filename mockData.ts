@@ -11,21 +11,88 @@ export interface SpecialityItem {
 
 export const MOCK_UNIVERSITIES: MockItem[] = [
   { id: "uni-1", name: "Universitatea de Stat din Moldova (USM)" },
-  { id: "uni-2", name: "Universitatea Tehnică a Moldovei (UTM)" },
-  { id: "uni-3", name: "Academia de Studii Economice din Moldova (ASEM)" },
-  { id: "uni-4", name: "Universitatea de Stat de Medicină și Farmacie „Nicolae Testemițanu” (USMF)" },
-  { id: "uni-5", name: "Universitatea Liberă Internațională din Moldova (ULIM)" },
-  { id: "uni-6", name: "Universitatea de Stat „Alecu Russo” din Bălți (USARB)" },
-  { id: "uni-7", name: "Universitatea de Stat „Bogdan Petriceicu Hasdeu” din Cahul (USCH)" }
+  { id: "uni-2", name: "Universitatea Pedagogică de Stat „Ion Creangă” (UPSC)" },
+  { id: "uni-3", name: "Universitatea Tehnică a Moldovei (UTM)" },
+  { id: "uni-4", name: "Academia de Studii Economice din Moldova (ASEM)" },
+  { id: "uni-5", name: "Universitatea de Stat „Alecu Russo” din Bălți (USARB)" },
+  { id: "uni-6", name: "Universitatea de Stat din Comrat (USC)" },
+  { id: "uni-7", name: "Universitatea „Anghel Kanchev” din Taraclia" },
+  { id: "uni-8", name: "Universitatea de Stat de Medicină și Farmacie „Nicolae Testemițanu” (USMF)" },
+  { id: "uni-9", name: "Academia de Muzică, Teatru și Arte Plastice (AMTAP)" },
+  { id: "uni-10", name: "Academia „Ștefan cel Mare” a Ministerului Afacerilor Interne" },
+  { id: "uni-11", name: "Academia Militară a Forțelor Armate „Alexandru cel Bun” (AMFA)" },
+  { id: "uni-12", name: "Universitatea Liberă Internațională din Moldova (ULIM)" },
+  { id: "uni-13", name: "Universitatea Cooperatist-Comercială din Moldova (UCCM)" },
+  { id: "uni-14", name: "Universitatea de Studii Politice și Economice Europene „Constantin Stere” (USPEE)" },
+  { id: "uni-15", name: "Universitatea de Studii Europene din Moldova (USEM)" }
 ];
 
+// COLEGII
 export const MOCK_COLLEGES: MockItem[] = [
   { id: "coll-1", name: "Centrul de Excelență în Informatică și Tehnologii Informaționale (CEITI)" },
-  { id: "coll-2", name: "Colegiul Politehnic din Chișinău" },
-  { id: "coll-3", name: "Centrul de Excelență în Transporturi (Colegiul de Transporturi)" },
+  { id: "coll-2", name: "Centrul de Excelență în Transporturi (CET)" },
+  { id: "coll-3", name: "Centrul de Excelență în Construcții (CEC)" },
   { id: "coll-4", name: "Centrul de Excelență în Economie și Finanțe (CEEF)" },
-  { id: "coll-5", name: "Colegiul Național de Comerț al ASEM" },
-  { id: "coll-6", name: "Colegiul de Medicină din Chișinău" }
+  { id: "coll-5", name: "Centrul de Excelență în Medicină și Farmacie „Raisa Pacalo” (CEMF)" },
+  { id: "coll-6", name: "Colegiul Politehnic din Chișinău" },
+  { id: "coll-7", name: "Colegiul Național de Comerț al ASEM" },
+  { id: "coll-8", name: "Colegiul Pedagogic „Ion Creangă” din Bălți" },
+  { id: "coll-9", name: "Colegiul „Alexei Mateevici” din Chișinău" },
+  { id: "coll-10", name: "Colegiul de Medicină din Chișinău" },
+  { id: "coll-11", name: "Colegiul de Arte Plastice „Alexandru Plămădeală” din Chișinău" },
+  { id: "coll-12", name: "Colegiul de Medicină Bălți" },
+  { id: "coll-13", name: "Colegiul de Medicină Ungheni" },
+  { id: "coll-14", name: "Colegiul de Medicină Orhei" },
+  { id: "coll-15", name: "Colegiul de Medicină Cahul" },
+  { id: "coll-16", name: "Colegiul Internațional de Administrare și Business" },
+  { id: "coll-17", name: "Colegiul de Studii Administrative și Fiscale" },
+  { id: "coll-18", name: "Colegiul Universității Libere Internaționale din Moldova" },
+  { id: "coll-19", name: "Colegiul de Criminologie, Administrare și Drept „Valeriu Bujor”" },
+  { id: "coll-20", name: "Colegiul Universității Tehnice a Moldovei (CUTM) din Chișinău" },
+  { id: "coll-21", name: "Colegiul Tehnologic din Chișinău" },
+  { id: "coll-22", name: "Colegiul de Ecologie din Chișinău" },
+  { id: "coll-23", name: "Colegiul Tehnic Feroviar din Bălți" },
+  { id: "coll-24", name: "Colegiul de Industrie Ușoară din Bălți" },
+  { id: "coll-25", name: "Colegiul Industrial-Pedagogic din Cahul" },
+  { id: "coll-26", name: "Colegiul Pedagogic „Mihai Eminescu” din Soroca" },
+  { id: "coll-27", name: "Colegiul Pedagogic „Vasile Lupu” din Orhei" },
+  { id: "coll-28", name: "Colegiul Pedagogic din Comrat" },
+  { id: "coll-29", name: "Colegiul de Construcții din Hîncești" }
+];
+
+export const MOCK_HIGH_SCHOOLS: MockItem[] = [
+  { id: "hs-1", name: "Liceul Teoretic „Mircea cel Bătrân” din Chișinău" },
+  { id: "hs-2", name: "Liceul Teoretic „Mihai Eminescu” din Chișinău" },
+  { id: "hs-3", name: "Liceul Teoretic „Spiru Haret” din Chișinău" },
+  { id: "hs-4", name: "Liceul Teoretic „Onisifor Ghibu” din Chișinău" },
+  { id: "hs-5", name: "Liceul Teoretic „Gheorghe Asachi” din Chișinău" },
+
+  { id: "hs-6", name: "Liceul Teoretic „Mihai Eminescu” din Bălți" },
+  { id: "hs-7", name: "Liceul Teoretic „Vasile Alecsandri” din Bălți" },
+  { id: "hs-8", name: "Liceul Teoretic „B.P. Hașdeu” din Bălți" },
+
+  { id: "hs-9", name: "Liceul Teoretic „Ion Creangă” din Cahul" },
+  { id: "hs-10", name: "Liceul Teoretic „Ioan Vodă” din Cahul" },
+
+  { id: "hs-11", name: "Liceul Teoretic „Vasile Lupu” din Orhei" },
+  { id: "hs-12", name: "Liceul Teoretic „Ion Luca Caragiale” din Orhei" },
+
+  { id: "hs-13", name: "Liceul Teoretic „Petru Rareș” din Soroca" },
+  { id: "hs-14", name: "Liceul Teoretic „Mihai Eminescu” din Soroca" },
+
+  { id: "hs-15", name: "Liceul Teoretic „Alexei Mateevici” din Ungheni" },
+  { id: "hs-16", name: "Liceul Teoretic „Ion Creangă” din Ungheni" },
+
+  { id: "hs-17", name: "Liceul Teoretic „Mihai Eminescu” din Hîncești" }
+];
+
+
+export const HIGH_SCHOOL_PROFILES = [
+  { id: "real", name: "Profil Real (Mate-Info / Științe Exacte)" },
+  { id: "uman", name: "Profil Umanist (Limbi Străine / Istorie)" },
+  { id: "artistic", name: "Profil Artistic / Muzică / Arhitectură" },
+  { id: "sportiv", name: "Profil Sportiv" },
+  { id: "tehnologic", name: "Profil Tehnologic / Servicii" },
 ];
 
 export const MOCK_COMPANIES: MockItem[] = [
@@ -54,11 +121,22 @@ export const MOCK_LOCATIONS: MockItem[] = [
   { id: "loc-1", name: "Chișinău" },
   { id: "loc-2", name: "Bălți" },
   { id: "loc-3", name: "Cahul" },
-  { id: "loc-4", name: "Ungheni" },
-  { id: "loc-5", name: "Orhei" },
-  { id: "loc-6", name: "Soroca" },
-  { id: "loc-7", name: "Hîncești" }
+  { id: "loc-4", name: "Orhei" },
+  { id: "loc-5", name: "Soroca" },
+  { id: "loc-6", name: "Ungheni" },
+  { id: "loc-7", name: "Hîncești" },
+  { id: "loc-8", name: "Comrat" },
+  { id: "loc-9", name: "Anenii Noi" },
+  { id: "loc-10", name: "Călărași" },
+  { id: "loc-11", name: "Căușeni" },
+  { id: "loc-12", name: "Edineț" },
+  { id: "loc-13", name: "Drochia" },
+  { id: "loc-14", name: "Florești" },
+  { id: "loc-15", name: "Rezina" },
+  { id: "loc-16", name: "Ștefan Vodă" },
+  { id: "loc-17", name: "Leova" }
 ];
+
 
 
 export const MOCK_SPECIALITIES: SpecialityItem[] = [
