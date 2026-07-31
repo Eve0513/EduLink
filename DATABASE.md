@@ -36,7 +36,6 @@
 | `start_date` | `date` |  |
 | `end_date` | `date` |  Nullable |
 | `is_current` | `bool` |  Nullable |
-| `gpa` | `numeric` |  Nullable |
 | `institution_id` | `uuid` |  Nullable |
 | `graduation_year` | `int2` |  Nullable |
 
@@ -331,10 +330,10 @@
 | `Utilizatorii își pot crea doar propriul profil` | INSERT | public | PERMISSIVE | — | `(auth.uid() = id)` |
 | `Utilizatorii își pot modifica doar propriul profil` | UPDATE | public | PERMISSIVE | `(auth.uid() = id)` | `(auth.uid() = id)` |
 | `Utilizatorii își pot șterge doar propriul profil` | DELETE | public | PERMISSIVE | `(auth.uid() = id)` | — |
+| `Users can delete their own profile` | DELETE | public | PERMISSIVE | `(auth.uid() = id)` | — |
 | `Profiles are publicly readable` | SELECT | public | PERMISSIVE | `true` | — |
 | `Users can insert their own profile` | INSERT | public | PERMISSIVE | — | `(auth.uid() = id)` |
 | `Users can update their own profile` | UPDATE | public | PERMISSIVE | `(auth.uid() = id)` | `(auth.uid() = id)` |
-| `Users can delete their own profile` | DELETE | public | PERMISSIVE | `(auth.uid() = id)` | — |
 
 ### `educations`
 
@@ -457,6 +456,7 @@
 | `institution requests requester read` | SELECT | public | PERMISSIVE | `(requested_by = auth.uid())` | — |
 
 
+
 -- WARNING: This schema is for context only and is not meant to be run.
 -- Table order and constraints may not be valid for execution.
 
@@ -491,7 +491,6 @@ CREATE TABLE public.educations (
   start_date date NOT NULL,
   end_date date,
   is_current boolean DEFAULT false,
-  gpa numeric CHECK (gpa >= 1.00 AND gpa <= 10.00),
   institution_id uuid,
   graduation_year smallint,
   CONSTRAINT educations_pkey PRIMARY KEY (id),
@@ -544,7 +543,7 @@ CREATE TABLE public.skills (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   profile_id uuid NOT NULL,
   name text NOT NULL,
-  level text CHECK (level = ANY (ARRAY['Începător'::text, 'Avansat'::text, 'Expert'::text])),
+  level text CHECK (level IS NULL OR (level = ANY (ARRAY['incepator'::text, 'intermediar'::text, 'avansat'::text]))) NOT VALI),
   CONSTRAINT skills_pkey PRIMARY KEY (id),
   CONSTRAINT skills_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id)
 );
