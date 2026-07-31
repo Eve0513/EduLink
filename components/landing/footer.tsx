@@ -1,0 +1,3 @@
+import Link from "next/link";
+import { Brand } from "@/components/landing/navbar";
+export function Footer() { return <footer className="border-t border-slate-200 bg-white"><div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-8 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-8"><div><Brand /><p className="mt-3">© 2026 EduLink. Toate drepturile rezervate.</p></div><div className="flex flex-wrap gap-5"><Link href="/terms">Termeni și Condiții</Link><Link href="/privacy">Politica de Confidențialitate</Link><Link href="/contact">Contact</Link></div></div></footer>; }

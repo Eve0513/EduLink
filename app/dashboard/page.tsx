@@ -17,9 +17,8 @@ export default async function DashboardPage() {
 
   if (!profile?.headline) redirect("/onboarding");
 
-  if (profile.role === "student") {
-    redirect("/dashboard/student/profile");
-  }
-
-  redirect("/dashboard/student/profile");
+  if (profile.role === "student") redirect("/feed");
+  if (profile.role === "company") redirect("/dashboard/company");
+  if (profile.role === "institution") redirect("/dashboard/institution");
+  redirect("/onboarding");
 }
