@@ -33,6 +33,7 @@ export async function updateSession(request: NextRequest) {
   const isAuthRoute =
     pathname.startsWith("/login") ||
     pathname.startsWith("/register") ||
+    pathname.startsWith("/signup") ||
     pathname.startsWith("/auth");
   const isPublicRoute =
     isAuthRoute || pathname === "/" || pathname.startsWith("/portofoliu");
@@ -43,7 +44,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && isAuthRoute) {
+  if (user && isAuthRoute && !pathname.startsWith("/auth/callback")) {
     const url = request.nextUrl.clone();
     url.pathname = "/onboarding";
     return NextResponse.redirect(url);
@@ -52,11 +53,11 @@ export async function updateSession(request: NextRequest) {
   if (user && !isPublicRoute && !pathname.startsWith("/onboarding")) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("headline, role")
+      .select("onboarding_completed")
       .eq("id", user.id)
       .single();
 
-    if (profile && !profile.headline && !pathname.startsWith("/onboarding")) {
+    if (!profile?.onboarding_completed && !pathname.startsWith("/onboarding")) {
       const url = request.nextUrl.clone();
       url.pathname = "/onboarding";
       return NextResponse.redirect(url);

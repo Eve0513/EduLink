@@ -3,13 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { UserRole } from "@/lib/types/database";
-import type {
-  ContactStepData,
-  EducationStepData,
-  ExperienceStepData,
-  ProjectStepData,
-  SkillStepData,
-} from "@/lib/validations/onboarding";
+type StudentOnboardingPayload = {
+  firstName: string; lastName: string; location: string; bio: string; avatarUrl: string | null;
+  education: { institution: string; degree: string; field: string; startDate: string; endDate: string; current: boolean };
+  desiredJobTitles: string[];
+  experiences: { position: string; company: string; location: string; start: string; description: string }[];
+  skills: { name: string; level: "incepator" | "intermediar" | "avansat" }[];
+};
 
 export async function updateUserRole(role: UserRole) {
   const supabase = await createClient();
@@ -32,13 +32,7 @@ export async function updateUserRole(role: UserRole) {
   return { success: true };
 }
 
-export async function completeStudentOnboarding(data: {
-  contact: ContactStepData;
-  educations: EducationStepData[];
-  experiences: ExperienceStepData[];
-  skills: SkillStepData[];
-  projects: ProjectStepData[];
-}) {
+export async function completeStudentOnboarding(data: StudentOnboardingPayload) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -53,30 +47,22 @@ export async function completeStudentOnboarding(data: {
   const { error: profileError } = await supabase
     .from("profiles")
     .update({
-      full_name: data.contact.fullName,
-      headline: data.contact.headline,
-      bio: data.contact.bio ?? null,
-      location: data.contact.location,
-      avatar_url: data.contact.avatarUrl ?? null,
+      full_name: `${data.firstName} ${data.lastName}`,
+      first_name: data.firstName,
+      last_name: data.lastName,
+      headline: data.desiredJobTitles[0] ?? "Student",
+      bio: data.bio || null,
+      location: data.location,
+      avatar_url: data.avatarUrl ?? null,
+      onboarding_completed: true,
       updated_at: new Date().toISOString(),
     })
     .eq("id", profileId);
 
   if (profileError) return { error: profileError.message };
 
-  if (data.educations.length > 0) {
-    const { error } = await supabase.from("educations").insert(
-      data.educations.map((edu) => ({
-        profile_id: profileId,
-        institution_name: edu.institution_name,
-        degree: edu.degree,
-        field_of_study: edu.field_of_study,
-        start_date: edu.start_date,
-        end_date: edu.is_current ? null : edu.end_date ?? null,
-        is_current: edu.is_current,
-        gpa: edu.gpa ?? null,
-      }))
-    );
+  {
+    const { error } = await supabase.from("educations").insert({ profile_id: profileId, institution_name: data.education.institution, degree: data.education.degree, field_of_study: data.education.field, start_date: data.education.startDate, end_date: data.education.current ? null : data.education.endDate || null, is_current: data.education.current });
     if (error) return { error: error.message };
   }
 
@@ -84,13 +70,13 @@ export async function completeStudentOnboarding(data: {
     const { error } = await supabase.from("experiences").insert(
       data.experiences.map((exp) => ({
         profile_id: profileId,
-        company_name: exp.company_name,
-        position_title: exp.position_title,
-        location: exp.location ?? null,
-        start_date: exp.start_date,
-        end_date: exp.is_current ? null : exp.end_date ?? null,
-        is_current: exp.is_current,
-        description: exp.description ?? null,
+        company_name: exp.company || "Independent",
+        position_title: exp.position,
+        location: exp.location || null,
+        start_date: exp.start || new Date().toISOString().slice(0, 10),
+        end_date: null,
+        is_current: true,
+        description: exp.description || null,
       }))
     );
     if (error) return { error: error.message };
@@ -107,20 +93,8 @@ export async function completeStudentOnboarding(data: {
     if (error) return { error: error.message };
   }
 
-  if (data.projects.length > 0) {
-    const { error } = await supabase.from("projects").insert(
-      data.projects.map((proj) => ({
-        profile_id: profileId,
-        title: proj.title,
-        description: proj.description ?? null,
-        github_url: proj.github_url ?? null,
-        live_demo_url: proj.live_demo_url ?? null,
-        technologies: proj.technologies,
-        image_url: proj.image_url ?? null,
-      }))
-    );
-    if (error) return { error: error.message };
-  }
+  const { error: preferenceError } = await supabase.from("student_preferences").upsert({ profile_id: profileId, desired_job_titles: data.desiredJobTitles, opportunity_types: [] }, { onConflict: "profile_id" });
+  if (preferenceError) return { error: preferenceError.message };
 
   revalidatePath("/dashboard");
   return { success: true };

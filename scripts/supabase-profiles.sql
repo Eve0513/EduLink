@@ -293,3 +293,41 @@ do $$ begin
   using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text)
   with check (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
 exception when duplicate_object then null; end $$;
+
+-- Product decision: GPA is not collected or retained by EduLink. This is a
+-- destructive, user-requested removal; export any historic values before apply.
+alter table public.educations drop column if exists gpa;
+
+-- Normalize skill levels used by the redesigned student onboarding.
+alter table public.skills drop constraint if exists skills_level_check;
+alter table public.skills add constraint skills_level_check
+  check (level is null or level in ('incepator', 'intermediar', 'avansat')) not valid;
+
+-- Defense in depth for legacy permissive RLS policies: a client cannot promote
+-- itself after onboarding and cannot insert a job unless it is a company.
+create or replace function public.prevent_completed_profile_role_change()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if old.onboarding_completed and new.role is distinct from old.role then
+    raise exception 'Rolul nu poate fi modificat după finalizarea onboarding-ului';
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists prevent_completed_profile_role_change on public.profiles;
+create trigger prevent_completed_profile_role_change before update of role on public.profiles
+for each row execute function public.prevent_completed_profile_role_change();
+
+create or replace function public.enforce_company_job_creator()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if not exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'company' and p.onboarding_completed) then
+    raise exception 'Doar conturile companie finalizate pot publica joburi';
+  end if;
+  if new.company_id <> auth.uid() then raise exception 'Compania nu corespunde utilizatorului autentificat'; end if;
+  return new;
+end;
+$$;
+drop trigger if exists enforce_company_job_creator on public.jobs;
+create trigger enforce_company_job_creator before insert or update on public.jobs
+for each row execute function public.enforce_company_job_creator();

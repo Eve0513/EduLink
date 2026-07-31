@@ -252,3 +252,16 @@ export const MOCK_JOB_TITLES: JobTitleItem[] = [
   { id: "job-29", name: "Administrator Hotel", category: "Medical, Educație și Horeca" },
   { id: "job-30", name: "Profesor / Învățător", category: "Medical, Educație și Horeca" }
 ];
+
+export const MOCK_SKILLS: MockItem[] = [
+  { id: "skill-react", name: "React" },
+  { id: "skill-nextjs", name: "Next.js" },
+  { id: "skill-python", name: "Python" },
+  { id: "skill-sql", name: "SQL" },
+  { id: "skill-uiux", name: "UI/UX Design" },
+  { id: "skill-figma", name: "Figma" },
+  { id: "skill-customer-care", name: "Customer Care" },
+  { id: "skill-excel", name: "Microsoft Excel" },
+  { id: "skill-communication", name: "Comunicare" },
+  { id: "skill-project-management", name: "Project Management" },
+];
