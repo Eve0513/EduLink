@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BarChart3, GraduationCap } from "lucide-react";
 
 export function Brand() {
-  return <Link href="/" className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-[#0e5e6f]"><span className="relative grid h-9 w-9 place-items-center rounded-xl bg-[#0e5e6f] text-white"><GraduationCap className="h-5 w-5" /><BarChart3 className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-[#168a9b] p-0.5" /></span>EduLink</Link>;
+  return <Link href="/" className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-[#0e5e6f]"><span className="relative grid h-9 w-9 place-items-center rounded-xl bg-[#0e5e6f] text-white"><img src="/EduLink_logo.png" alt="EduLink Logo" className="h-9 w-auto object-contain" /> </span>EduLink</Link>;
 }
 
 export function Navbar() {
