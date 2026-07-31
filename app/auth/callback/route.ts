@@ -1,21 +1,64 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
 
-export async function GET(request: Request) {
+type PendingCookie = { name: string; value: string; options: CookieOptions };
+
+export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
+  const tokenHash = searchParams.get("token_hash");
+  const type = searchParams.get("type");
   const requestedNext = searchParams.get("next");
-  const next = requestedNext?.startsWith("/") && !requestedNext.startsWith("//")
-    ? requestedNext
-    : "/dashboard";
+  const next = requestedNext?.startsWith("/") && !requestedNext.startsWith("//") ? requestedNext : "/dashboard";
+  const pendingCookies: PendingCookie[] = [];
+  const pendingHeaders: Record<string, string> = {};
 
-  if (code) {
-    const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll: () => request.cookies.getAll(),
+        setAll: (cookies, headers) => {
+          pendingCookies.push(...cookies);
+          Object.assign(pendingHeaders, headers);
+        },
+      },
     }
+  );
+
+  const redirect = (path: string) => {
+    const response = NextResponse.redirect(`${origin}${path}`);
+    pendingCookies.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+    Object.entries(pendingHeaders).forEach(([name, value]) => response.headers.set(name, value));
+    return response;
+  };
+
+  const result = code
+    ? await supabase.auth.exchangeCodeForSession(code)
+    : tokenHash && type === "signup"
+      ? await supabase.auth.verifyOtp({ token_hash: tokenHash, type: "signup" })
+      : null;
+
+  if (!result?.error && result?.data.user) {
+    const user = result.data.user;
+    const metadata = user.user_metadata;
+    const firstName = typeof metadata.first_name === "string" ? metadata.first_name : null;
+    const lastName = typeof metadata.last_name === "string" ? metadata.last_name : null;
+    const fullName = typeof metadata.full_name === "string" && metadata.full_name.trim()
+      ? metadata.full_name.trim()
+      : [firstName, lastName].filter(Boolean).join(" ") || user.email?.split("@")[0] || "Utilizator EduLink";
+
+    const { error: profileError } = await supabase.from("profiles").upsert({
+      id: user.id,
+      email: user.email ?? "",
+      full_name: fullName,
+      first_name: firstName,
+      last_name: lastName,
+    }, { onConflict: "id" });
+
+    if (!profileError) return redirect(next);
   }
 
-  return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`);
+  return redirect("/auth/confirm-email?error=auth_callback_failed");
 }
