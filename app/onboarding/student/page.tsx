@@ -12,12 +12,12 @@ export default async function StudentOnboardingPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("headline, role")
+    .select("onboarding_completed, role")
     .eq("id", user.id)
     .single();
 
-  if (profile?.headline) {
-    redirect("/dashboard/student/profile");
+  if (profile?.onboarding_completed) {
+    redirect("/feed");
   }
 
   if (profile?.role !== "student") {

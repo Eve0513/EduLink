@@ -46,7 +46,7 @@ export async function updateSession(request: NextRequest) {
 
   if (user && isAuthRoute && !pathname.startsWith("/auth/callback")) {
     const url = request.nextUrl.clone();
-    url.pathname = "/onboarding";
+    url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
 

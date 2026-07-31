@@ -14,7 +14,7 @@ export default async function FeedPage() {
   if (!user) redirect("/login");
   const { data: meData } = await supabase.from("profiles").select("id, full_name, headline, avatar_url, role, institution_id").eq("id", user.id).single();
   const me = meData as ProfileSummary | null;
-  if (!me?.headline) redirect("/onboarding");
+  if (!me) redirect("/onboarding");
   const { data: following } = await supabase.from("follows").select("target_type, target_id").eq("follower_id", user.id);
   const userTargets = (following ?? []).filter((item) => item.target_type === "user").map((item) => item.target_id);
   const { data: recentPosts } = await supabase.from("posts").select("id, content, image_url, created_at, creator_id").order("created_at", { ascending: false }).limit(30);

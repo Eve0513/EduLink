@@ -13,11 +13,11 @@ export default async function Home() {
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role, headline")
+      .select("role, onboarding_completed")
       .eq("id", user.id)
       .maybeSingle();
 
-    if (!profile?.headline) redirect("/onboarding");
+    if (!profile?.onboarding_completed) redirect("/onboarding");
     if (profile.role === "student") redirect("/feed");
     redirect(`/dashboard/${profile.role}`);
   }
