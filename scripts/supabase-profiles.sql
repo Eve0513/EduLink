@@ -3,6 +3,14 @@
 
 create extension if not exists pgcrypto;
 
+-- Additive: supports the combined secondary + bachelor program displayed in onboarding.
+do $$
+begin
+  if exists (select 1 from pg_type where typname = 'degree_type') then
+    alter type public.degree_type add value if not exists 'bacalaureat_licenta';
+  end if;
+end $$;
+
 do $$
 begin
   if not exists (select 1 from pg_type where typname = 'user_role') then

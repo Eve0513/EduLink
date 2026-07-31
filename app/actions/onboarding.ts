@@ -122,6 +122,36 @@ export async function updateProfileField(
   return { success: true, value };
 }
 
+export async function saveStudentProfileBasics(data: {
+  fullName: string;
+  headline: string;
+  location: string;
+  bio: string;
+}) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Sesiunea a expirat. Autentifică-te din nou." };
+
+  const fullName = data.fullName.trim();
+  if (!fullName) return { error: "Numele complet este obligatoriu." };
+
+  const names = fullName.split(/\s+/);
+  const { error } = await supabase.from("profiles").update({
+    full_name: fullName,
+    first_name: names.slice(0, -1).join(" ") || names[0],
+    last_name: names.length > 1 ? names[names.length - 1] : null,
+    headline: data.headline.trim() || null,
+    location: data.location.trim() || null,
+    bio: data.bio.trim() || null,
+    updated_at: new Date().toISOString(),
+  }).eq("id", user.id);
+
+  if (error) return { error: error.message };
+  revalidatePath("/dashboard/student/profile");
+  revalidatePath("/feed");
+  return { success: true };
+}
+
 export async function uploadAvatar(formData: FormData) {
   const supabase = await createClient();
   const {

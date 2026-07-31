@@ -1,119 +1,13 @@
 "use client";
 
+import { ExternalLink, Loader2, Sparkles } from "lucide-react";
 import { useState } from "react";
-import { Loader2, Sparkles, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  DashboardSidebar,
-  DashboardHeader,
-} from "@/components/dashboard/sidebar";
+import { StudentHeader } from "@/components/dashboard/student-header";
 
-export function AIHubClient({ portfolioSlug }: { portfolioSlug: string | null }) {
+export function AIHubClient({ portfolioSlug, name, avatarUrl }: { portfolioSlug: string | null; name: string; avatarUrl: string | null }) {
   const [generating, setGenerating] = useState(false);
   const [atsScore, setAtsScore] = useState<number | null>(null);
-
-  async function handleGenerateCV() {
-    setGenerating(true);
-    try {
-      const res = await fetch("/api/ai/generate-cv", { method: "POST" });
-      const data = await res.json();
-
-      if (!res.ok) {
-        toast.error(data.error ?? "Eroare la generarea CV-ului");
-        return;
-      }
-
-      setAtsScore(data.ats_score ?? null);
-      toast.success(`CV generat! Scor ATS: ${data.ats_score ?? "N/A"}%`);
-    } catch {
-      toast.error("Eroare de rețea");
-    } finally {
-      setGenerating(false);
-    }
-  }
-
-  return (
-    <div className="min-h-screen bg-background">
-      <DashboardSidebar currentPath="/dashboard/student/ai-hub" />
-      <main className="md:pl-64">
-        <div className="mx-auto max-w-4xl space-y-8 px-6 py-8">
-          <DashboardHeader
-            title="AI Hub"
-            subtitle="Generează CV optimizat ATS și publică portofoliul"
-          />
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  Generează CV
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  AI-ul analizează experiența ta și generează un CV optimizat
-                  pentru sisteme ATS.
-                </p>
-                {atsScore !== null && (
-                  <p className="text-sm font-medium text-primary">
-                    Ultimul scor ATS: {atsScore}%
-                  </p>
-                )}
-                <Button
-                  onClick={handleGenerateCV}
-                  disabled={generating}
-                  className="w-full"
-                >
-                  {generating ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      AI-ul analizează experiența ta...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-4 w-4" />
-                      Generează CV cu AI
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <ExternalLink className="h-4 w-4 text-primary" />
-                  Portofoliu public
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Profilul tău este accesibil public prin link unic.
-                </p>
-                {portfolioSlug ? (
-                  <Button variant="outline" className="w-full" asChild>
-                    <a
-                      href={`/portofoliu/${portfolioSlug}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                      Afișează portofoliul
-                    </a>
-                  </Button>
-                ) : (
-                  <p className="text-xs text-muted-foreground">
-                    Slug-ul portofoliului nu este disponibil.
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
+  async function handleGenerateCV() { setGenerating(true); try { const res = await fetch("/api/ai/generate-cv", { method: "POST" }); const data: { error?: string; ats_score?: number } = await res.json(); if (!res.ok) { toast.error(data.error ?? "Eroare la generarea CV-ului"); return; } setAtsScore(data.ats_score ?? null); toast.success(`CV generat. Scor ATS: ${data.ats_score ?? "N/A"}%`); } catch { toast.error("Eroare de rețea. Încearcă din nou."); } finally { setGenerating(false); } }
+  return <div className="min-h-screen bg-[#f5f8f9]"><StudentHeader name={name} avatarUrl={avatarUrl} current="ai" /><main className="mx-auto max-w-4xl space-y-8 px-5 py-8 sm:px-6"><div className="border-b border-slate-200 pb-6"><p className="text-xs font-bold uppercase tracking-wider text-[#0e5e6f]">Spațiul tău AI</p><h1 className="mt-2 text-3xl font-extrabold text-slate-950">AI Hub</h1><p className="mt-2 text-slate-600">Generează CV optimizat ATS și publică portofoliul.</p></div><div className="grid gap-6 md:grid-cols-2"><section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><h2 className="flex items-center gap-2 text-lg font-extrabold"><Sparkles className="h-5 w-5 text-[#026a81]" />Generează CV</h2><p className="mt-4 text-sm leading-6 text-slate-600">Asigură-te că profilul este complet înainte de generare; AI-ul va utiliza informațiile disponibile.</p>{atsScore !== null ? <p className="mt-4 text-sm font-bold text-[#0e5e6f]">Ultimul scor ATS: {atsScore}%</p> : null}<button onClick={handleGenerateCV} disabled={generating} className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#026a81] px-4 py-3 font-bold text-white hover:bg-[#003747] disabled:opacity-70">{generating ? <><Loader2 className="h-4 w-4 animate-spin" />Se generează CV-ul...</> : <><Sparkles className="h-4 w-4" />Generează CV cu AI</>}</button></section><section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><h2 className="flex items-center gap-2 text-lg font-extrabold"><ExternalLink className="h-5 w-5 text-[#026a81]" />Portofoliu public</h2><p className="mt-4 text-sm leading-6 text-slate-600">Profilul tău este publicat în template-ul EduLink, fără injectare de HTML nesigur.</p>{portfolioSlug ? <a href={`/portofoliu/${portfolioSlug}`} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#0e5e6f] px-4 py-3 font-bold text-[#0e5e6f] hover:bg-[#e5f4f6]"><ExternalLink className="h-4 w-4" />Afișează portofoliul</a> : <p className="mt-6 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">Finalizează profilul pentru a primi adresa publică.</p>}</section></div></main></div>;
 }
