@@ -80,7 +80,7 @@ export async function completeStudentOnboarding(data: StudentOnboardingPayload) 
     const { error } = await supabase.from("experiences").insert(
       data.experiences.map((exp) => ({
         profile_id: profileId,
-        company_name: exp.company || "Independent",
+        company_name: exp.company || null,
         position_title: exp.position,
         location: exp.location || null,
         start_date: exp.start || new Date().toISOString().slice(0, 10),
@@ -108,6 +108,68 @@ export async function completeStudentOnboarding(data: StudentOnboardingPayload) 
 
   revalidatePath("/dashboard");
   return { success: true };
+}
+
+const organizationBasicsSchema = z.object({
+  firstName: z.string().trim().min(1, "Prenumele este obligatoriu.").max(80),
+  lastName: z.string().trim().min(1, "Numele este obligatoriu.").max(80),
+  jobTitle: z.string().trim().min(2, "Funcția este obligatorie.").max(160),
+  mode: z.enum(["create", "join", "request"]),
+  organizationName: z.string().trim().max(180),
+  inviteCode: z.string().trim().max(32),
+  website: z.string().trim().max(500),
+  organizationType: z.enum(["liceu", "colegiu", "universitate"]).optional(),
+  city: z.string().trim().max(120),
+  officialEmail: z.string().trim().max(254),
+  companySize: z.string().trim().max(60),
+  sector: z.string().trim().max(120),
+});
+
+export type OrganizationOnboardingData = z.infer<typeof organizationBasicsSchema>;
+
+async function completeOrganizationOnboarding(
+  kind: "company" | "institution",
+  data: OrganizationOnboardingData
+) {
+  const parsed = organizationBasicsSchema.safeParse(data);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Verifică datele introduse." };
+  const value = parsed.data;
+  if (value.mode === "join" && (!value.organizationName || !value.inviteCode)) return { error: "Alege organizația și introdu codul de invitație." };
+  if (value.mode === "create" && !value.organizationName) return { error: "Numele organizației este obligatoriu." };
+  if (kind === "institution" && value.mode === "request" && (!value.organizationName || !value.city || !value.officialEmail || !value.organizationType)) return { error: "Completează numele, tipul, orașul și e-mailul oficial." };
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Sesiunea a expirat. Autentifică-te din nou." };
+
+  const functionName = kind === "company" ? "complete_company_onboarding" : "complete_institution_onboarding";
+  const { data: result, error } = await supabase.rpc(functionName, {
+    p_first_name: value.firstName,
+    p_last_name: value.lastName,
+    p_job_title: value.jobTitle,
+    p_mode: value.mode,
+    p_organization_name: value.organizationName || null,
+    p_invite_code: value.inviteCode || null,
+    p_website: value.website || null,
+    p_company_size: kind === "company" ? value.companySize || null : null,
+    p_sector: kind === "company" ? value.sector || null : null,
+    p_institution_type: kind === "institution" ? value.organizationType ?? null : null,
+    p_city: kind === "institution" ? value.city || null : null,
+    p_official_email: kind === "institution" ? value.officialEmail || null : null,
+  });
+  if (error || !result || typeof result !== "object") return { error: "Nu am putut finaliza onboarding-ul. Verifică datele sau codul de invitație." };
+  const response = result as { invite_code?: string; pending?: boolean };
+  revalidatePath("/onboarding");
+  revalidatePath(`/dashboard/${kind}`);
+  return { success: true, inviteCode: response.invite_code ?? null, pending: response.pending === true };
+}
+
+export async function completeCompanyOnboarding(data: OrganizationOnboardingData) {
+  return await completeOrganizationOnboarding("company", data);
+}
+
+export async function completeInstitutionOnboarding(data: OrganizationOnboardingData) {
+  return await completeOrganizationOnboarding("institution", data);
 }
 
 export async function updateProfileField(

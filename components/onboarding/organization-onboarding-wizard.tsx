@@ -1,0 +1,70 @@
+"use client";
+
+import { useRef, useState, type ReactNode } from "react";
+import { ArrowLeft, ArrowRight, Building2, Check, Copy, Landmark, Upload } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { completeCompanyOnboarding, completeInstitutionOnboarding, uploadAvatar, type OrganizationOnboardingData } from "@/app/actions/onboarding";
+import { MOCK_COMPANIES, MOCK_COLLEGES, MOCK_HIGH_SCHOOLS, MOCK_UNIVERSITIES } from "@/mockData";
+
+type OrganizationKind = "company" | "institution";
+type Mode = "create" | "join" | "request";
+const inputClass = "mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-950 outline-none transition focus:border-[#026a81] focus:ring-2 focus:ring-[#026a81]/20";
+const institutionOptions = [...MOCK_HIGH_SCHOOLS, ...MOCK_COLLEGES, ...MOCK_UNIVERSITIES];
+
+export function OrganizationOnboardingWizard({ kind }: { kind: OrganizationKind }) {
+  const router = useRouter();
+  const avatarInput = useRef<HTMLInputElement>(null);
+  const [step, setStep] = useState(0);
+  const [mode, setMode] = useState<Mode>("create");
+  const [saving, setSaving] = useState(false);
+  const [showCode, setShowCode] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [form, setForm] = useState({ firstName: "", lastName: "", jobTitle: "", organizationName: "", inviteCode: "", website: "", companySize: "", sector: "", organizationType: "universitate", city: "", officialEmail: "" });
+  const isCompany = kind === "company";
+  const entity = isCompany ? "companie" : "instituție";
+  const heading = isCompany ? "Construiește echipa care găsește talente." : "Conectează instituția cu oportunități reale.";
+  const organizationChoices = isCompany ? MOCK_COMPANIES : institutionOptions;
+  const setValue = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => setForm((current) => ({ ...current, [key]: value }));
+
+  function pickAvatar(file: File | undefined) {
+    if (!file) return;
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size > 5 * 1024 * 1024) { toast.error("Alege o imagine JPG, PNG sau WebP de maximum 5 MB."); return; }
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+    toast.success("Imaginea va fi salvată la finalizarea onboarding-ului.");
+  }
+
+  function validateDetails() {
+    if (!form.firstName.trim() || !form.lastName.trim() || !form.jobTitle.trim()) { toast.error("Completează numele, prenumele și funcția reprezentantului."); return false; }
+    if (mode === "join" && (!form.organizationName || !form.inviteCode)) { toast.error("Alege organizația și introdu codul de invitație primit."); return false; }
+    if (mode === "create" && !form.organizationName.trim()) { toast.error(`Numele ${entity}i este obligatoriu.`); return false; }
+    if (!isCompany && mode === "request" && (!form.organizationName.trim() || !form.city.trim() || !form.officialEmail.trim())) { toast.error("Completează toate datele necesare pentru cerere."); return false; }
+    return true;
+  }
+
+  async function finish() {
+    if (!validateDetails()) return;
+    setSaving(true);
+    if (avatarFile) {
+      const uploadData = new FormData(); uploadData.set("file", avatarFile);
+      const upload = await uploadAvatar(uploadData);
+      if (upload.error) { toast.error(upload.error); setSaving(false); return; }
+    }
+    const data: OrganizationOnboardingData = { ...form, mode, organizationType: form.organizationType as "liceu" | "colegiu" | "universitate" };
+    const result = isCompany ? await completeCompanyOnboarding(data) : await completeInstitutionOnboarding(data);
+    if (result.error) { toast.error(result.error); setSaving(false); return; }
+    if (result.inviteCode) { setShowCode(result.inviteCode); toast.success("Organizația a fost creată. Păstrează codul în siguranță."); setSaving(false); return; }
+    toast.success(result.pending ? "Cererea a fost trimisă spre revizuire." : "Echipa a fost configurată cu succes.");
+    router.replace(`/dashboard/${kind}`); router.refresh();
+  }
+
+  async function copyCode() { if (showCode) { await navigator.clipboard.writeText(showCode); toast.success("Cod copiat în clipboard."); } }
+  function continueFromCode() { setShowCode(null); router.replace(`/dashboard/${kind}`); router.refresh(); }
+
+  return <main className="relative min-h-screen overflow-hidden bg-[#f8fafc] p-4 sm:p-8"><div className="pointer-events-none absolute -left-32 top-8 h-96 w-96 rounded-full bg-[#168a9b]/15 blur-3xl" /><div className="pointer-events-none absolute right-0 top-1/2 h-80 w-80 rounded-full bg-[#026a81]/10 blur-3xl" /><div className="relative mx-auto grid max-w-5xl overflow-hidden rounded-3xl border border-white/80 bg-white shadow-2xl shadow-[#003747]/10 lg:grid-cols-[290px_1fr]"><aside className="hidden bg-[linear-gradient(145deg,#003747,#0e5e6f_55%,#026a81)] p-8 text-white lg:block"><div className="flex items-center gap-2 text-xl font-extrabold">{isCompany ? <Building2 /> : <Landmark />} EduLink</div><div className="mt-20 rounded-2xl border border-white/20 bg-white/10 p-4"><p className="text-xs font-bold tracking-wider text-white/70">ONBOARDING {isCompany ? "COMPANIE" : "INSTITUȚIE"}</p><h1 className="mt-4 text-3xl font-extrabold leading-tight">{heading}</h1><p className="mt-5 text-sm leading-6 text-white/80">Datele se pot completa și actualiza ulterior din setările organizației.</p></div></aside><section className="p-6 sm:p-10"><div className="mb-7 flex gap-1.5">{[0, 1, 2].map((item) => <span key={item} className={`h-1.5 flex-1 rounded-full ${item <= step ? "bg-[#026a81]" : "bg-slate-200"}`} />)}</div><p className="text-sm font-bold text-[#026a81]">Pasul {step + 1} din 3</p><h2 className="mt-2 text-2xl font-extrabold text-slate-950">{step === 0 ? "Reprezentant și organizație" : step === 1 ? "Fotografie de profil" : "Revizuire și finalizare"}</h2>{step === 0 ? <div className="mt-6 space-y-5"><div className="grid gap-4 sm:grid-cols-2"><Field label="Nume *" helper="Numele de familie al reprezentantului."><input className={inputClass} value={form.lastName} onChange={(event) => setValue("lastName", event.target.value)} /></Field><Field label="Prenume *" helper="Prenumele reprezentantului."><input className={inputClass} value={form.firstName} onChange={(event) => setValue("firstName", event.target.value)} /></Field></div><Field label={isCompany ? "Funcție *" : "Funcție în instituție *"} helper={isCompany ? "Ex.: HR Manager sau Founder." : "Ex.: Decan sau Coordonator carieră."}><input className={inputClass} value={form.jobTitle} onChange={(event) => setValue("jobTitle", event.target.value)} /></Field><div className="grid gap-3 sm:grid-cols-2"><ModeCard active={mode === "create"} onClick={() => setMode("create")} title={isCompany ? "Înregistrează o companie nouă" : "Înregistrează o instituție nouă"} description="Devii administrator și primești un cod de invitație." /> <ModeCard active={mode === "join"} onClick={() => setMode("join")} title="Alătură-te unei organizații" description="Folosește codul primit de la administrator." />{!isCompany ? <ModeCard active={mode === "request"} onClick={() => setMode("request")} title="Instituția nu este în listă" description="Trimite o cerere pentru revizuire." /> : null}</div>{mode === "join" ? <><Field label={`Alege ${entity}a *`} helper="Începe cu organizațiile cunoscute; codul rămâne obligatoriu."><select className={inputClass} value={form.organizationName} onChange={(event) => setValue("organizationName", event.target.value)}><option value="">Selectează organizația</option>{organizationChoices.map((item) => <option key={item.id} value={item.name}>{item.name}</option>)}</select></Field><Field label="Cod de invitație *" helper="Formatul este XXXX-XXXX-XXXX-XXXX."><input className={inputClass} value={form.inviteCode} placeholder="EDUL-8X92-K4M7-P2W1" onChange={(event) => setValue("inviteCode", event.target.value.toUpperCase())} /></Field></> : <><Field label={`Nume ${entity} *`} helper={mode === "request" ? "Numele oficial al instituției." : "Va fi afișat colegilor și studenților."}><input className={inputClass} value={form.organizationName} onChange={(event) => setValue("organizationName", event.target.value)} /></Field><div className="grid gap-4 sm:grid-cols-2">{!isCompany ? <Field label="Tip instituție *" helper="Tipul oficial de învățământ."><select className={inputClass} value={form.organizationType} onChange={(event) => setValue("organizationType", event.target.value)}><option value="liceu">Liceu</option><option value="colegiu">Colegiu</option><option value="universitate">Universitate</option></select></Field> : <Field label="Domeniu" helper="Ex.: Tehnologie sau Finanțe."><input className={inputClass} value={form.sector} onChange={(event) => setValue("sector", event.target.value)} /></Field>}<Field label={isCompany ? "Mărime echipă" : "Oraș *"} helper={isCompany ? "Ex.: 11–50 angajați." : "Sediul principal al instituției."}><input className={inputClass} value={isCompany ? form.companySize : form.city} onChange={(event) => setValue(isCompany ? "companySize" : "city", event.target.value)} /></Field></div>{mode === "request" ? <Field label="E-mail oficial *" helper="Folosim adresa doar pentru verificarea cererii."><input type="email" className={inputClass} value={form.officialEmail} onChange={(event) => setValue("officialEmail", event.target.value)} /></Field> : null}<Field label="Website (opțional)" helper="Adresa publică a organizației."><input type="url" className={inputClass} value={form.website} onChange={(event) => setValue("website", event.target.value)} placeholder="https://" /></Field></>}</div> : null}{step === 1 ? <div className="mt-6"><button type="button" onClick={() => avatarInput.current?.click()} className="grid h-28 w-28 place-items-center overflow-hidden rounded-full border-2 border-dashed border-[#026a81] bg-[#e5f4f6]">{avatarPreview ? <img src={avatarPreview} alt="Previzualizare fotografie profil" className="h-full w-full object-cover" /> : <Upload className="h-7 w-7 text-[#026a81]" />}</button><input ref={avatarInput} type="file" className="hidden" accept="image/png,image/jpeg,image/webp" onChange={(event) => pickAvatar(event.target.files?.[0])} /><p className="mt-4 text-sm font-bold text-slate-900">Adaugă o fotografie de profil (opțional)</p><p className="mt-1 max-w-lg text-sm leading-6 text-slate-600">Poți alege logo-ul organizației sau o fotografie profesională. Dacă omiți acest pas, folosim inițiala numelui.</p></div> : null}{step === 2 ? <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm"><p className="font-extrabold text-slate-950">{form.firstName} {form.lastName}</p><p className="mt-1 text-slate-600">{form.jobTitle}</p><div className="mt-5 border-t border-slate-200 pt-4"><p className="font-bold text-slate-900">{form.organizationName || "Organizație"}</p><p className="mt-1 text-slate-600">{mode === "join" ? "Alăturare la echipă prin cod de invitație" : mode === "request" ? "Cerere în curs de revizuire" : "Vei deveni administratorul organizației"}</p></div></div> : null}<div className="mt-9 flex items-center justify-between gap-3">{step > 0 ? <button type="button" onClick={() => setStep((current) => current - 1)} className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-800"><ArrowLeft className="h-4 w-4" />Înapoi</button> : <span />}{step < 2 ? <button type="button" onClick={() => { if (step === 0 && !validateDetails()) return; setStep((current) => current + 1); }} className="inline-flex items-center gap-2 rounded-xl bg-[#026a81] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#003747]">Continuă <ArrowRight className="h-4 w-4" /></button> : <button type="button" disabled={saving} onClick={finish} className="inline-flex items-center gap-2 rounded-xl bg-[#026a81] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#003747] disabled:opacity-70">{saving ? "Se finalizează..." : "Finalizează"} <Check className="h-4 w-4" /></button>}</div></section></div>{showCode ? <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4"><section role="dialog" aria-modal="true" className="w-full max-w-md rounded-3xl bg-white p-7 shadow-2xl"><p className="text-sm font-bold text-[#026a81]">FELICITĂRI!</p><h2 className="mt-2 text-2xl font-extrabold text-slate-950">Codul echipei tale</h2><p className="mt-3 text-sm leading-6 text-slate-600">Păstrează acest cod în siguranță și oferă-l doar colegilor autorizați.</p><div className="mt-5 flex items-center justify-between gap-3 rounded-xl bg-[#e5f4f6] p-4"><code className="font-extrabold tracking-widest text-[#003747]">{showCode}</code><button onClick={copyCode} className="inline-flex items-center gap-2 rounded-lg bg-[#0e5e6f] px-3 py-2 text-sm font-bold text-white"><Copy className="h-4 w-4" />Copiază</button></div><button onClick={continueFromCode} className="mt-6 w-full rounded-xl bg-[#026a81] px-4 py-3 text-sm font-bold text-white">Mergi la dashboard</button></section></div> : null}</main>;
+}
+
+function Field({ label, helper, children }: { label: string; helper: string; children: ReactNode }) { return <label className="block text-sm font-bold text-slate-900">{label}<span className="mt-1 block text-xs font-normal text-slate-500">{helper}</span>{children}</label>; }
+function ModeCard({ active, onClick, title, description }: { active: boolean; onClick: () => void; title: string; description: string }) { return <button type="button" onClick={onClick} className={`rounded-xl border p-4 text-left transition ${active ? "border-[#026a81] bg-[#e5f4f6] ring-2 ring-[#026a81]/15" : "border-slate-200 bg-white hover:border-[#168a9b]"}`}><span className="text-sm font-extrabold text-slate-950">{title}</span><span className="mt-1 block text-xs leading-5 text-slate-600">{description}</span></button>; }

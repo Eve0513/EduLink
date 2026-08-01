@@ -47,7 +47,7 @@
 |------|------|-------------|
 | `id` | `uuid` | Primary |
 | `profile_id` | `uuid` |  |
-| `company_name` | `text` |  |
+| `company_name` | `text` |  Nullable |
 | `position_title` | `text` |  |
 | `location` | `text` |  Nullable |
 | `work_mode` | `work_mode` |  Nullable |
@@ -286,6 +286,23 @@
 | `reviewed_at` | `timestamptz` |  Nullable |
 | `created_at` | `timestamptz` |  |
 
+## Table `recommendation_requests`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `profile_id` | `uuid` |  |
+| `recipient_name` | `text` |  |
+| `recipient_email` | `citext` |  |
+| `relationship` | `text` |  Nullable |
+| `message` | `text` |  Nullable |
+| `status` | `text` |  |
+| `recommendation_text` | `text` |  Nullable |
+| `created_at` | `timestamptz` |  |
+| `updated_at` | `timestamptz` |  |
+
 ## Custom Types / Enums
 
 ### `event_type_enum`
@@ -326,14 +343,28 @@
 
 | Policy | Command | Roles | Action | USING | WITH CHECK |
 |--------|---------|-------|--------|-------|------------|
+| `Profiles are publicly readable` | SELECT | public | PERMISSIVE | `true` | — |
+| `Users can insert their own profile` | INSERT | public | PERMISSIVE | — | `(auth.uid() = id)` |
+| `Users can update their own profile` | UPDATE | public | PERMISSIVE | `(auth.uid() = id)` | `(auth.uid() = id)` |
+| `Users can delete their own profile` | DELETE | public | PERMISSIVE | `(auth.uid() = id)` | — |
 | `Profilurile sunt publice pentru vizualizare` | SELECT | public | PERMISSIVE | `true` | — |
 | `Utilizatorii își pot crea doar propriul profil` | INSERT | public | PERMISSIVE | — | `(auth.uid() = id)` |
 | `Utilizatorii își pot modifica doar propriul profil` | UPDATE | public | PERMISSIVE | `(auth.uid() = id)` | `(auth.uid() = id)` |
 | `Utilizatorii își pot șterge doar propriul profil` | DELETE | public | PERMISSIVE | `(auth.uid() = id)` | — |
-| `Users can insert their own profile` | INSERT | public | PERMISSIVE | — | `(auth.uid() = id)` |
-| `Users can update their own profile` | UPDATE | public | PERMISSIVE | `(auth.uid() = id)` | `(auth.uid() = id)` |
-| `Users can delete their own profile` | DELETE | public | PERMISSIVE | `(auth.uid() = id)` | — |
-| `Profiles are publicly readable` | SELECT | public | PERMISSIVE | `true` | — |
+
+### `recommendation_requests`
+
+| Policy | Command | Roles | Action | USING | WITH CHECK |
+|--------|---------|-------|--------|-------|------------|
+| `recommendation requests private` | ALL | public | PERMISSIVE | `(profile_id = auth.uid())` | `(profile_id = auth.uid())` |
+
+### `jobs`
+
+| Policy | Command | Roles | Action | USING | WITH CHECK |
+|--------|---------|-------|--------|-------|------------|
+| `only company admins can create jobs` | INSERT | public | PERMISSIVE | — | `(is_company_admin(company_id) AND (EXISTS ( SELECT 1    FROM profiles p   WHERE ((p.id = auth.uid()) AND (p.role = 'company'::user_role) AND p.onboarding_completed))))` |
+| `Joburile sunt vizibile publicului` | SELECT | public | PERMISSIVE | `true` | — |
+| `Doar companiile isi pot gestiona joburile` | ALL | public | PERMISSIVE | `(auth.uid() = company_id)` | `(auth.uid() = company_id)` |
 
 ### `educations`
 
@@ -407,14 +438,6 @@
 | `CRUD complet pe postari proprii` | ALL | public | PERMISSIVE | `(auth.uid() = creator_id)` | `(auth.uid() = creator_id)` |
 | `post creators need active profile` | INSERT | public | PERMISSIVE | — | `((creator_id = auth.uid()) AND (EXISTS ( SELECT 1    FROM profiles p   WHERE ((p.id = auth.uid()) AND p.onboarding_completed))))` |
 
-### `jobs`
-
-| Policy | Command | Roles | Action | USING | WITH CHECK |
-|--------|---------|-------|--------|-------|------------|
-| `Joburile sunt vizibile publicului` | SELECT | public | PERMISSIVE | `true` | — |
-| `Doar companiile isi pot gestiona joburile` | ALL | public | PERMISSIVE | `(auth.uid() = company_id)` | `(auth.uid() = company_id)` |
-| `only company role can create jobs` | INSERT | public | PERMISSIVE | — | `((company_id = auth.uid()) AND (EXISTS ( SELECT 1    FROM profiles p   WHERE ((p.id = auth.uid()) AND (p.role = 'company'::user_role) AND p.onboarding_completed))))` |
-
 ### `follows`
 
 | Policy | Command | Roles | Action | USING | WITH CHECK |
@@ -477,8 +500,8 @@ CREATE TABLE public.profiles (
   onboarding_completed boolean NOT NULL DEFAULT false,
   institution_id uuid,
   CONSTRAINT profiles_pkey PRIMARY KEY (id),
-  CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id),
-  CONSTRAINT profiles_institution_id_fkey FOREIGN KEY (institution_id) REFERENCES public.institutions(id)
+  CONSTRAINT profiles_institution_id_fkey FOREIGN KEY (institution_id) REFERENCES public.institutions(id),
+  CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.educations (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -498,7 +521,7 @@ CREATE TABLE public.educations (
 CREATE TABLE public.experiences (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   profile_id uuid NOT NULL,
-  company_name text NOT NULL,
+  company_name text,
   position_title text NOT NULL,
   location text,
   work_mode USER-DEFINED,
@@ -698,4 +721,18 @@ CREATE TABLE public.institution_requests (
   CONSTRAINT institution_requests_pkey PRIMARY KEY (id),
   CONSTRAINT institution_requests_requested_by_fkey FOREIGN KEY (requested_by) REFERENCES public.profiles(id),
   CONSTRAINT institution_requests_reviewed_by_fkey FOREIGN KEY (reviewed_by) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.recommendation_requests (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  profile_id uuid NOT NULL,
+  recipient_name text NOT NULL CHECK (char_length(TRIM(BOTH FROM recipient_name)) >= 2 AND char_length(TRIM(BOTH FROM recipient_name)) <= 160),
+  recipient_email USER-DEFINED NOT NULL CHECK (recipient_email ~* '^[^@[:space:]]+@[^@[:space:]]+\\.[^@[:space:]]+$'::citext),
+  relationship text,
+  message text CHECK (message IS NULL OR char_length(message) <= 1500),
+  status text NOT NULL DEFAULT 'draft'::text CHECK (status = ANY (ARRAY['draft'::text, 'requested'::text, 'received'::text, 'declined'::text])),
+  recommendation_text text CHECK (recommendation_text IS NULL OR char_length(recommendation_text) <= 4000),
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT recommendation_requests_pkey PRIMARY KEY (id),
+  CONSTRAINT recommendation_requests_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id)
 );

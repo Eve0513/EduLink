@@ -170,6 +170,32 @@ export const GeneratedCVSchema = z
 
 export type GeneratedCV = z.infer<typeof GeneratedCVSchema>;
 
+/**
+ * Safe delivery fallback. Gemini is used for editorial optimization, but a
+ * temporary provider/schema failure must not deny a student a PDF containing
+ * their own confirmed profile data. This function deliberately does not add
+ * facts, metrics, skills, or inferred achievements.
+ */
+export function buildFallbackCV(input: CVGenerationInput): GeneratedCV {
+  const summary = input.profile.bio?.trim() || (input.profile.headline?.trim()
+    ? `Profil EduLink pentru ${input.profile.headline.trim()}.`
+    : "Profil EduLink bazat pe informațiile confirmate de student.");
+  const takeSentences = (value: string) => value.split(/(?<=[.!?])\s+/).map((item) => item.trim()).filter(Boolean).slice(0, 5).map((item) => item.slice(0, 220));
+  const score = Math.min(100, 35 + (input.educations.length ? 20 : 0) + (input.experiences.length ? 20 : 0) + (input.projects.length ? 15 : 0) + Math.min(input.skills.length, 5) * 2);
+  return {
+    language: input.language,
+    target_role_inferred: input.profile.headline?.trim() || "Student",
+    contact: { full_name: input.profile.full_name, email: input.profile.email, phone: input.profile.phone, location: input.profile.location, contact_link: input.profile.portfolio_slug ? `/portofoliu/${input.profile.portfolio_slug}` : null },
+    professional_summary: summary.slice(0, 650),
+    education: input.educations.map((item) => ({ degree_level: item.degree_level, field_of_study: item.field_of_study, institution_name: item.institution_name, start_date: item.start_date, end_date: item.end_date })),
+    experience: input.experiences.map((item) => ({ job_title: item.job_title, organization_name: item.organization_name, employment_type: item.employment_type, location: item.location, start_date: item.start_date, end_date: item.end_date, bullets: takeSentences(item.description) })),
+    projects: input.projects.map((item) => ({ title: item.title, description_bullets: takeSentences(item.description), technologies: item.technologies, repo_url: item.repo_url, live_url: item.live_url })),
+    certificates: input.certificates.map((item) => ({ title: item.title, issuing_organization: item.issuing_organization, date_issued: item.date_issued, credential_id: item.credential_id, is_verified: item.is_verified, relevance_note: null })),
+    skills: input.skills.map((item) => ({ name: item.name, level: item.level })),
+    ats_report: { score, score_breakdown: { keyword_alignment: input.skills.length ? 60 : 20, structure_and_formatting: input.educations.length || input.experiences.length ? 70 : 30, quantifiable_impact: 20, action_verb_usage: input.experiences.length || input.projects.length ? 55 : 20 }, missing_or_weak_areas: [], improvement_suggestions: ["Completează descrierile experiențelor cu responsabilități reale.", "Adaugă proiecte sau certificate doar dacă le poți verifica.", "Revizuiește datele de contact și perioadele înainte de trimitere."] },
+  };
+}
+
 // ----------------------------------------------------------------------------
 // 2. SYSTEM PROMPT
 // ----------------------------------------------------------------------------
