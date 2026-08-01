@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import type { UserRole } from "@/lib/types/database";
 type StudentOnboardingPayload = {
@@ -10,6 +11,15 @@ type StudentOnboardingPayload = {
   experiences: { position: string; company: string; location: string; start: string; description: string }[];
   skills: { name: string; level: "incepator" | "intermediar" | "avansat" }[];
 };
+
+const profileBasicsSchema = z.object({
+  fullName: z.string().trim().min(1, "Numele complet este obligatoriu.").max(160),
+  headline: z.string().trim().max(160),
+  location: z.string().trim().max(160),
+  bio: z.string().trim().max(2500),
+});
+
+const saveError = "Nu am putut salva modificările acum. Încearcă din nou.";
 
 export async function updateUserRole(role: UserRole) {
   const supabase = await createClient();
@@ -26,7 +36,7 @@ export async function updateUserRole(role: UserRole) {
     .update({ role })
     .eq("id", user.id);
 
-  if (error) return { error: error.message };
+  if (error) return { error: saveError };
 
   revalidatePath("/onboarding");
   return { success: true };
@@ -59,11 +69,11 @@ export async function completeStudentOnboarding(data: StudentOnboardingPayload) 
     })
     .eq("id", profileId);
 
-  if (profileError) return { error: profileError.message };
+  if (profileError) return { error: saveError };
 
   {
     const { error } = await supabase.from("educations").insert({ profile_id: profileId, institution_name: data.education.institution, degree: data.education.degree, field_of_study: data.education.field, start_date: data.education.startDate, end_date: data.education.current ? null : data.education.endDate || null, is_current: data.education.current });
-    if (error) return { error: error.message };
+    if (error) return { error: saveError };
   }
 
   if (data.experiences.length > 0) {
@@ -79,7 +89,7 @@ export async function completeStudentOnboarding(data: StudentOnboardingPayload) 
         description: exp.description || null,
       }))
     );
-    if (error) return { error: error.message };
+    if (error) return { error: saveError };
   }
 
   if (data.skills.length > 0) {
@@ -90,11 +100,11 @@ export async function completeStudentOnboarding(data: StudentOnboardingPayload) 
         level: skill.level,
       }))
     );
-    if (error) return { error: error.message };
+    if (error) return { error: saveError };
   }
 
   const { error: preferenceError } = await supabase.from("student_preferences").upsert({ profile_id: profileId, desired_job_titles: data.desiredJobTitles, opportunity_types: [] }, { onConflict: "profile_id" });
-  if (preferenceError) return { error: preferenceError.message };
+  if (preferenceError) return { error: saveError };
 
   revalidatePath("/dashboard");
   return { success: true };
@@ -116,7 +126,7 @@ export async function updateProfileField(
     .update({ [field]: value, updated_at: new Date().toISOString() })
     .eq("id", user.id);
 
-  if (error) return { error: error.message };
+  if (error) return { error: saveError };
 
   revalidatePath("/dashboard/student/profile");
   return { success: true, value };
@@ -132,23 +142,27 @@ export async function saveStudentProfileBasics(data: {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Sesiunea a expirat. Autentifică-te din nou." };
 
-  const fullName = data.fullName.trim();
-  if (!fullName) return { error: "Numele complet este obligatoriu." };
+  const parsed = profileBasicsSchema.safeParse(data);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Verifică datele profilului." };
+  const fullName = parsed.data.fullName;
 
   const names = fullName.split(/\s+/);
   const { error } = await supabase.from("profiles").update({
     full_name: fullName,
     first_name: names.slice(0, -1).join(" ") || names[0],
     last_name: names.length > 1 ? names[names.length - 1] : null,
-    headline: data.headline.trim() || null,
-    location: data.location.trim() || null,
-    bio: data.bio.trim() || null,
+    headline: parsed.data.headline || null,
+    location: parsed.data.location || null,
+    bio: parsed.data.bio || null,
     updated_at: new Date().toISOString(),
   }).eq("id", user.id);
 
-  if (error) return { error: error.message };
+  if (error) return { error: saveError };
   revalidatePath("/dashboard/student/profile");
+  revalidatePath("/dashboard/student/portfolio");
   revalidatePath("/feed");
+  const { data: profile } = await supabase.from("profiles").select("qr_code_slug").eq("id", user.id).maybeSingle();
+  if (profile?.qr_code_slug) revalidatePath(`/portofoliu/${profile.qr_code_slug}`);
   return { success: true };
 }
 
@@ -198,6 +212,9 @@ export async function removeAvatar() {
   const { error } = await supabase.from("profiles").update({ avatar_url: null }).eq("id", user.id);
   if (error) return { error: "Fotografia nu a putut fi eliminată acum. Încearcă din nou." };
   revalidatePath("/dashboard/student/profile");
+  revalidatePath("/dashboard/student/portfolio");
   revalidatePath("/feed");
+  const { data: profile } = await supabase.from("profiles").select("qr_code_slug").eq("id", user.id).maybeSingle();
+  if (profile?.qr_code_slug) revalidatePath(`/portofoliu/${profile.qr_code_slug}`);
   return { success: true };
 }

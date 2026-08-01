@@ -74,7 +74,7 @@ export async function saveExperience(input: ExperienceInput): Promise<ActionResu
   const { supabase, user } = await getCurrentUser();
   if (!user) return { error: "Sesiunea a expirat. Autentifică-te din nou." };
   if (!input.positionTitle.trim() || !input.startDate) return { error: "Completează titlul funcției și data începerii." };
-  const values = { profile_id: user.id, position_title: input.positionTitle.trim(), company_name: input.companyName.trim() || "Independent", location: input.location.trim() || null, work_mode: input.workMode, job_type: input.jobType, start_date: input.startDate, end_date: input.isCurrent ? null : input.endDate, is_current: input.isCurrent, description: input.description.trim() || null };
+  const values = { profile_id: user.id, position_title: input.positionTitle.trim(), company_name: input.companyName.trim() || null, location: input.location.trim() || null, work_mode: input.workMode, job_type: input.jobType, start_date: input.startDate, end_date: input.isCurrent ? null : input.endDate, is_current: input.isCurrent, description: input.description.trim() || null };
   const query = input.id ? supabase.from("experiences").update(values).eq("id", input.id).eq("profile_id", user.id) : supabase.from("experiences").insert(values);
   const { error } = await query;
   if (error) return { error: userMessage() };
@@ -185,4 +185,21 @@ export async function deleteRecommendationRequest(id: string): Promise<ActionRes
   if (error) return { error: userMessage() };
   await refreshStudentProfile(user.id);
   return { success: true };
+}
+
+export async function uploadProfileMedia(formData: FormData): Promise<{ success: true; url: string } | { error: string }> {
+  const { supabase, user } = await getCurrentUser();
+  if (!user) return { error: "Sesiunea a expirat. Autentifică-te din nou." };
+  const file = formData.get("file");
+  if (!(file instanceof File)) return { error: "Alege un fișier înainte de încărcare." };
+  const acceptedTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+  if (!acceptedTypes.includes(file.type) || file.size > 10 * 1024 * 1024) {
+    return { error: "Alege o imagine JPG, PNG, WebP sau un PDF mai mic de 10 MB." };
+  }
+  const extension = file.type === "application/pdf" ? "pdf" : file.type.split("/")[1] ?? "bin";
+  const path = `${user.id}/${crypto.randomUUID()}.${extension}`;
+  const { error } = await supabase.storage.from("profile-media").upload(path, file, { upsert: false });
+  if (error) return { error: "Fișierul nu a putut fi încărcat acum. Încearcă din nou." };
+  const { data } = supabase.storage.from("profile-media").getPublicUrl(path);
+  return { success: true, url: data.publicUrl };
 }

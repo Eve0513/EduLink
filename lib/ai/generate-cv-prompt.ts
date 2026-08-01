@@ -18,6 +18,8 @@
  * ============================================================================
  */
 
+import { z } from "zod";
+
 // ----------------------------------------------------------------------------
 // 1. TIPURI DE INPUT (oglindesc tabelele Supabase din PRD, secțiunea 3.B)
 // ----------------------------------------------------------------------------
@@ -46,7 +48,7 @@ export interface EduLinkEducation {
 export interface EduLinkExperience {
   employment_type: string; // Job Full-time, Part-time, Internship, Voluntariat
   job_title: string;
-  organization_name: string;
+  organization_name: string | null;
   location: string | null;
   start_date: string;
   end_date: string | null;
@@ -71,7 +73,7 @@ export interface EduLinkCertificate {
 
 export interface EduLinkSkill {
   name: string;
-  level: "Începător" | "Avansat" | "Expert";
+  level: "Începător" | "Intermediar" | "Avansat";
 }
 
 export interface CVGenerationInput {
@@ -83,6 +85,90 @@ export interface CVGenerationInput {
   certificates: EduLinkCertificate[];
   skills: EduLinkSkill[];
 }
+
+const nullableText = z.string().nullable();
+
+export const GeneratedCVSchema = z
+  .object({
+    language: z.enum(["ro", "en"]),
+    target_role_inferred: z.string().min(1).max(160),
+    contact: z
+      .object({
+        full_name: z.string().min(1).max(160),
+        email: nullableText,
+        phone: nullableText,
+        location: nullableText,
+        contact_link: nullableText,
+      })
+      .strict(),
+    professional_summary: z.string().max(650),
+    education: z.array(
+      z
+        .object({
+          degree_level: z.string(),
+          field_of_study: z.string(),
+          institution_name: z.string(),
+          start_date: z.string(),
+          end_date: nullableText,
+        })
+        .strict(),
+    ),
+    experience: z.array(
+      z
+        .object({
+          job_title: z.string(),
+          organization_name: nullableText,
+          employment_type: z.string(),
+          location: nullableText,
+          start_date: z.string(),
+          end_date: nullableText,
+          bullets: z.array(z.string().max(220)).max(5),
+        })
+        .strict(),
+    ),
+    projects: z.array(
+      z
+        .object({
+          title: z.string(),
+          description_bullets: z.array(z.string().max(220)).max(5),
+          technologies: z.array(z.string()),
+          repo_url: nullableText,
+          live_url: nullableText,
+        })
+        .strict(),
+    ),
+    certificates: z.array(
+      z
+        .object({
+          title: z.string(),
+          issuing_organization: z.string(),
+          date_issued: z.string(),
+          credential_id: nullableText,
+          is_verified: z.boolean(),
+          relevance_note: nullableText,
+        })
+        .strict(),
+    ),
+    skills: z.array(z.object({ name: z.string(), level: z.enum(["Începător", "Intermediar", "Avansat"]) }).strict()),
+    ats_report: z
+      .object({
+        score: z.number().min(0).max(100),
+        score_breakdown: z
+          .object({
+            keyword_alignment: z.number().min(0).max(100),
+            structure_and_formatting: z.number().min(0).max(100),
+            quantifiable_impact: z.number().min(0).max(100),
+            action_verb_usage: z.number().min(0).max(100),
+          })
+          .strict(),
+        missing_or_weak_areas: z.array(z.string()),
+        improvement_suggestions: z.array(z.string()).length(3),
+      })
+      .strict(),
+  })
+  .strict();
+
+export type GeneratedCV = z.infer<typeof GeneratedCVSchema>;
 
 // ----------------------------------------------------------------------------
 // 2. SYSTEM PROMPT
@@ -118,8 +204,7 @@ STRICT INTERZIS (halucinație = eșec critic):
   îmbunătățit performanța sistemului" — NU "a redus timpul cu 40%").
 - NU adaugi tehnologii/certificări/competențe suplimentare care nu apar în
   array-urile de input, chiar dacă "s-ar potrivi bine" cu rolul dedus.
-- NU modifici date calendaristice, note (GPA), sau statusul is_verified al
-  certificatelor.
+- NU modifici date calendaristice sau statusul is_verified al certificatelor.
 - Dacă o secțiune (ex: experiences) este goală ([]) în input, secțiunea
   corespunzătoare din output rămâne un array gol — NU completezi cu exemple
   fictive "pentru completitudine".
@@ -197,7 +282,7 @@ Calculezi "ats_report.score" (0-100) ca medie ponderată a patru sub-scoruri
     acțiune puternice.
 Oferi exact 3 "improvement_suggestions", concrete și acționabile de către
 STUDENT (nu de către AI), ex: "Adaugă rezultate cuantificabile la proiectul X",
-"Completează media academică (GPA) pentru a crește scorul de structură",
+"Completează specializarea sau perioada studiilor pentru a crește scorul de structură",
 "Obține o certificare recunoscută în [domeniul dedus din skills]".
 
 ═══════════════════════════════════════════════════════════════════════════
@@ -288,7 +373,7 @@ export const CV_JSON_SCHEMA = {
           ],
           properties: {
             job_title: { type: "string" },
-            organization_name: { type: "string" },
+            organization_name: { type: ["string", "null"] },
             employment_type: { type: "string" },
             location: { type: ["string", "null"] },
             start_date: { type: "string" },
@@ -361,7 +446,7 @@ export const CV_JSON_SCHEMA = {
           required: ["name", "level"],
           properties: {
             name: { type: "string" },
-            level: { type: "string", enum: ["Începător", "Avansat", "Expert"] },
+       level: { type: "string", enum: ["Începător", "Intermediar", "Avansat"] },
           },
         },
       },

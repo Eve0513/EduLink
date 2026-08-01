@@ -19,7 +19,7 @@ export function SocialAuthButtons() {
       },
     });
     if (error) {
-      toast.error(`Eroare la autentificare: ${error.message}`);
+      toast.error("Autentificarea nu a putut fi pornită acum. Încearcă din nou.");
       setLoadingProvider(null);
     }
   }

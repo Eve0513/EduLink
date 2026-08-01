@@ -296,6 +296,11 @@ exception when duplicate_object then null; end $$;
 do $$ begin
   create policy "recommendation requests private" on public.recommendation_requests for all using (profile_id = auth.uid()) with check (profile_id = auth.uid());
 exception when duplicate_object then null; end $$;
+drop trigger if exists set_recommendation_requests_updated_at on public.recommendation_requests;
+create trigger set_recommendation_requests_updated_at
+before update on public.recommendation_requests
+for each row execute function public.set_updated_at();
+
 do $$ begin
   create policy "institution requests own" on public.institution_requests for insert with check (requested_by = auth.uid());
   create policy "institution requests requester read" on public.institution_requests for select using (requested_by = auth.uid());
@@ -304,16 +309,25 @@ do $$ begin
   create policy "follows owner only" on public.follows for all using (follower_id = auth.uid()) with check (follower_id = auth.uid());
 exception when duplicate_object then null; end $$;
 
--- Student community content is allowed; jobs stay constrained to company role.
+-- Student community content is allowed; jobs stay constrained to company admins.
 do $$ begin
   create policy "post creators need active profile" on public.posts for insert with check (creator_id = auth.uid() and exists (select 1 from public.profiles p where p.id = auth.uid() and p.onboarding_completed));
   create policy "event creators need active profile" on public.events for insert with check (creator_id = auth.uid() and exists (select 1 from public.profiles p where p.id = auth.uid() and p.onboarding_completed));
-  create policy "only company role can create jobs" on public.jobs for insert with check (company_id = auth.uid() and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'company' and p.onboarding_completed));
 exception when duplicate_object then null; end $$;
+drop policy if exists "only company role can create jobs" on public.jobs;
+drop policy if exists "only company admins can create jobs" on public.jobs;
+create policy "only company admins can create jobs" on public.jobs for insert
+with check (
+  public.is_company_admin(company_id)
+  and exists (
+    select 1 from public.profiles p
+    where p.id = auth.uid() and p.role = 'company' and p.onboarding_completed
+  )
+);
 
 -- Storage policy for avatars: users own the first path segment, their UUID.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('avatars', 'avatars', true, 2097152, array['image/jpeg', 'image/png', 'image/webp'])
+values ('avatars', 'avatars', true, 5242880, array['image/jpeg', 'image/png', 'image/webp'])
 on conflict (id) do update set public = excluded.public, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
 do $$ begin
   create policy "avatar owner manages files" on storage.objects for all to authenticated
@@ -321,9 +335,24 @@ do $$ begin
   with check (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
 exception when duplicate_object then null; end $$;
 
+-- Project/certificate media is intentionally a separate, public bucket: an
+-- uploaded file is shown only where the student links it from their profile.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('profile-media', 'profile-media', true, 10485760, array['image/jpeg', 'image/png', 'image/webp', 'application/pdf'])
+on conflict (id) do update set public = excluded.public, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+do $$ begin
+  create policy "profile media owner manages files" on storage.objects for all to authenticated
+  using (bucket_id = 'profile-media' and (storage.foldername(name))[1] = auth.uid()::text)
+  with check (bucket_id = 'profile-media' and (storage.foldername(name))[1] = auth.uid()::text);
+exception when duplicate_object then null; end $$;
+
 -- Product decision: GPA is not collected or retained by EduLink. This is a
 -- destructive, user-requested removal; export any historic values before apply.
 alter table public.educations drop column if exists gpa;
+
+-- A self-directed project, volunteer activity or internship can legitimately
+-- have no employer. Preserve that fact instead of inserting a fictional name.
+alter table public.experiences alter column company_name drop not null;
 
 -- Normalize skill levels used by the redesigned student onboarding.
 alter table public.skills drop constraint if exists skills_level_check;
@@ -351,7 +380,9 @@ begin
   if not exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'company' and p.onboarding_completed) then
     raise exception 'Doar conturile companie finalizate pot publica joburi';
   end if;
-  if new.company_id <> auth.uid() then raise exception 'Compania nu corespunde utilizatorului autentificat'; end if;
+  if not public.is_company_admin(new.company_id) then
+    raise exception 'Utilizatorul nu este administrator al companiei selectate';
+  end if;
   return new;
 end;
 $$;
