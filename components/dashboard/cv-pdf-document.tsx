@@ -1,42 +1,44 @@
 "use client";
 
-import {
-  Document,
-  Page,
-  StyleSheet,
-  Text,
-  View,
-} from "@react-pdf/renderer";
+import { Document, Font, Link, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import type { GeneratedCV } from "@/lib/ai/generate-cv-prompt";
+
+// Helvetica omits Romanian glyphs. The Unicode font is shipped with EduLink so
+// every downloaded PDF preserves diacritics independently of the device.
+Font.register({
+  family: "EduLink Unicode",
+  fonts: [
+    { src: "/fonts/DejaVuSans.ttf", fontWeight: 400 },
+    { src: "/fonts/DejaVuSans.ttf", fontWeight: 700 },
+  ],
+});
 
 const colors = {
   ink: "#0f172a",
   muted: "#475569",
   teal: "#0e5e6f",
   line: "#cbd5e1",
-  pale: "#eef6f7",
 };
 
 const styles = StyleSheet.create({
-  page: { paddingTop: 38, paddingHorizontal: 42, paddingBottom: 42, fontFamily: "Helvetica", color: colors.ink, fontSize: 9.5, lineHeight: 1.45 },
-  name: { color: colors.teal, fontFamily: "Helvetica-Bold", fontSize: 24, letterSpacing: 0.3 },
-  role: { fontFamily: "Helvetica-Bold", fontSize: 11, marginTop: 3 },
+  page: { paddingTop: 38, paddingHorizontal: 42, paddingBottom: 42, fontFamily: "EduLink Unicode", color: colors.ink, fontSize: 9.5, lineHeight: 1.45 },
+  name: { color: colors.teal, fontSize: 24, fontWeight: 700, letterSpacing: 0.3 },
+  role: { fontSize: 11, fontWeight: 700, marginTop: 3 },
   contact: { color: colors.muted, fontSize: 8.5, marginTop: 6 },
   divider: { borderBottomColor: colors.teal, borderBottomWidth: 2, marginTop: 12 },
   section: { marginTop: 14 },
-  sectionTitle: { color: colors.teal, fontFamily: "Helvetica-Bold", fontSize: 10, letterSpacing: 0.8, marginBottom: 5, textTransform: "uppercase" },
+  sectionTitle: { color: colors.teal, fontSize: 10, fontWeight: 700, letterSpacing: 0.8, marginBottom: 5, textTransform: "uppercase" },
   body: { color: colors.ink, fontSize: 9.3, lineHeight: 1.45 },
   entry: { marginBottom: 8 },
   entryHeader: { flexDirection: "row", justifyContent: "space-between", gap: 12 },
-  entryTitle: { fontFamily: "Helvetica-Bold", fontSize: 9.7, flexGrow: 1 },
+  entryTitle: { fontSize: 9.7, fontWeight: 700, flexGrow: 1 },
   dates: { color: colors.muted, fontSize: 8.3 },
   metadata: { color: colors.muted, fontSize: 8.4, marginTop: 1 },
   bullet: { flexDirection: "row", gap: 5, marginTop: 2 },
-  bulletMark: { color: colors.teal, fontFamily: "Helvetica-Bold" },
+  bulletMark: { color: colors.teal, fontWeight: 700 },
   bulletText: { flexGrow: 1, fontSize: 9.1 },
   skills: { color: colors.ink, fontSize: 9.1, lineHeight: 1.6 },
-  report: { backgroundColor: colors.pale, borderColor: colors.line, borderWidth: 1, borderRadius: 4, padding: 9 },
-  reportScore: { color: colors.teal, fontFamily: "Helvetica-Bold", fontSize: 16 },
+  link: { color: colors.teal, fontSize: 8.4, marginTop: 2, textDecoration: "underline" },
   footer: { bottom: 22, color: colors.muted, fontSize: 7.5, left: 42, position: "absolute", right: 42, textAlign: "center" },
 });
 
@@ -47,7 +49,7 @@ function displayDate(value: string | null) {
 }
 
 function dateRange(start: string, end: string | null) {
-  return `${displayDate(start)} - ${displayDate(end)}`;
+  return `${displayDate(start)} – ${displayDate(end)}`;
 }
 
 function nonEmpty(values: Array<string | null>) {
@@ -59,7 +61,7 @@ function BulletList({ items }: { items: string[] }) {
     <View>
       {items.map((item, index) => (
         <View key={`${item}-${index}`} style={styles.bullet}>
-          <Text style={styles.bulletMark}>-</Text>
+          <Text style={styles.bulletMark}>•</Text>
           <Text style={styles.bulletText}>{item}</Text>
         </View>
       ))}
@@ -124,6 +126,8 @@ export function CVPdfDocument({ cv }: { cv: GeneratedCV }) {
                 <Text style={styles.entryTitle}>{project.title}</Text>
                 {project.technologies.length ? <Text style={styles.metadata}>{project.technologies.join(" | ")}</Text> : null}
                 <BulletList items={project.description_bullets} />
+                {project.live_url ? <Link src={project.live_url} style={styles.link}>{project.live_url}</Link> : null}
+                {!project.live_url && project.repo_url ? <Link src={project.repo_url} style={styles.link}>{project.repo_url}</Link> : null}
               </View>
             ))}
           </View>
@@ -147,15 +151,6 @@ export function CVPdfDocument({ cv }: { cv: GeneratedCV }) {
             <Text style={styles.skills}>{cv.skills.map((skill) => `${skill.name} (${skill.level})`).join(" | ")}</Text>
           </View>
         ) : null}
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Raport ATS EduLink</Text>
-          <View style={styles.report}>
-            <Text style={styles.reportScore}>Scor ATS: {Math.round(cv.ats_report.score)} / 100</Text>
-            <Text style={[styles.metadata, { marginTop: 4 }]}>Cuvinte-cheie: {Math.round(cv.ats_report.score_breakdown.keyword_alignment)} | Structură: {Math.round(cv.ats_report.score_breakdown.structure_and_formatting)} | Impact: {Math.round(cv.ats_report.score_breakdown.quantifiable_impact)} | Verbe de acțiune: {Math.round(cv.ats_report.score_breakdown.action_verb_usage)}</Text>
-            <BulletList items={cv.ats_report.improvement_suggestions} />
-          </View>
-        </View>
 
         <Text fixed style={styles.footer}>Generat de EduLink pe baza informațiilor confirmate în profil. Verifică datele înainte de distribuire.</Text>
       </Page>

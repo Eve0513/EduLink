@@ -1,6 +1,27 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CalendarDays, Settings } from "lucide-react";
+import { OrganizationDashboardClient } from "@/components/dashboard/organization-dashboard-client";
 import { createClient } from "@/lib/supabase/server";
-import { InviteCodeCard } from "@/components/dashboard/invite-code-card";
-export default async function InstitutionDashboard() { const supabase = await createClient(); const { data: { user } } = await supabase.auth.getUser(); if (!user) redirect("/login"); const { data: profile } = await supabase.from("profiles").select("role, headline").eq("id", user.id).single(); if (profile?.role !== "institution" || !profile.headline) redirect("/onboarding"); const { data: institution } = await supabase.from("institutions").select("name, invite_code").eq("created_by", user.id).maybeSingle(); return <main className="min-h-screen bg-[#f8fafc] p-5 sm:p-10"><div className="mx-auto max-w-5xl"><div className="flex items-center justify-between gap-4"><div><p className="text-sm font-bold text-[#168a9b]">DASHBOARD ACADEMIC</p><h1 className="mt-1 text-3xl font-extrabold">{institution?.name ?? "Instituția ta"}</h1></div><Link href="/dashboard/institution/settings" className="inline-flex items-center gap-2 rounded-lg border border-[#0e5e6f] px-4 py-2.5 text-sm font-bold text-[#0e5e6f]"><Settings className="h-4 w-4" />Setări</Link></div><div className="mt-8 grid gap-5 md:grid-cols-2"><section className="rounded-2xl bg-[#0e5e6f] p-6 text-white"><CalendarDays className="h-8 w-8" /><h2 className="mt-6 text-xl font-bold">Evenimente și anunțuri</h2><p className="mt-3 text-sm leading-6 text-white/80">Publică activități academice și păstrează comunitatea conectată.</p></section><InviteCodeCard code={institution?.invite_code ?? null} entity="instituție" /></div></div></main>; }
+
+export default async function InstitutionDashboardPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: profile } = await supabase.from("profiles").select("role, onboarding_completed, bio").eq("id", user.id).maybeSingle();
+  if (profile?.role !== "institution" || !profile.onboarding_completed) redirect("/onboarding");
+
+  const { data: membership } = await supabase.from("institution_members").select("institution_id").eq("user_id", user.id).maybeSingle();
+  const institutionQuery = membership?.institution_id
+    ? supabase.from("institutions").select("id, name, website, city, type, invite_code").eq("id", membership.institution_id).maybeSingle()
+    : supabase.from("institutions").select("id, name, website, city, type, invite_code").eq("created_by", user.id).maybeSingle();
+  const { data: institution } = await institutionQuery;
+  if (!institution) redirect("/onboarding/institution");
+
+  const [{ count: followerCount }, { data: posts }, { data: events }] = await Promise.all([
+    supabase.from("follows").select("id", { count: "exact", head: true }).eq("target_type", "institution").eq("target_id", institution.id),
+    supabase.from("posts").select("id, content, image_url, created_at").eq("creator_id", user.id).order("created_at", { ascending: false }).limit(20),
+    supabase.from("events").select("id, title, description, location, start_date, start_time, event_type, created_at").eq("creator_id", user.id).order("created_at", { ascending: false }).limit(12),
+  ]);
+
+  return <OrganizationDashboardClient kind="institution" organization={{ id: institution.id, name: institution.name, website: institution.website, location: institution.city, sector: institution.type, inviteCode: institution.invite_code, description: profile.bio }} followerCount={followerCount ?? 0} posts={posts ?? []} events={events ?? []} />;
+}

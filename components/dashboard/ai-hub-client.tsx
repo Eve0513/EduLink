@@ -46,7 +46,7 @@ export function AIHubClient({
       }
 
       setGeneratedCV(data.cv);
-      toast.success(`CV-ul este gata. Scor ATS: ${Math.round(data.ats_score)}%.`);
+      toast.success(`CV-ul este gata. Scor ATS: ${Math.round(data.ats_score)}%. Descarcă documentul când ești pregătit.`);
     } catch {
       toast.error("Conexiunea a fost întreruptă. Încearcă din nou.");
     } finally {
@@ -111,7 +111,7 @@ export function AIHubClient({
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="flex items-center gap-2 text-lg font-extrabold text-slate-950"><ExternalLink className="h-5 w-5 text-[#026a81]" />Portofoliu public</h2>
             <p className="mt-4 text-sm leading-6 text-slate-600">Portofoliul tău folosește un template EduLink sigur și își actualizează datele direct din profil.</p>
-            <button type="button" onClick={() => setIntent("portfolio")} className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#0e5e6f] px-4 py-3 font-bold text-[#0e5e6f] transition hover:bg-[#e5f4f6]">
+            <button type="button" onClick={() => setIntent("portfolio")} disabled={generating} className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#0e5e6f] px-4 py-3 font-bold text-[#0e5e6f] transition hover:bg-[#e5f4f6] disabled:cursor-not-allowed disabled:opacity-70">
               <ExternalLink className="h-4 w-4" />Generează portofoliu
             </button>
           </section>
