@@ -31,19 +31,31 @@ export async function updateUserRole(role: UserRole) {
     return { error: "Neautentificat" };
   }
 
-  // The auth trigger normally creates this row. Upsert keeps the first
-  // onboarding step usable while that trigger is still being committed.
-  const { error } = await supabase
+  // The auth trigger normally creates the profile. Updating that row first is
+  // more reliable than an upsert: the latter can fail when a profile trigger
+  // or a unique e-mail constraint is still being settled after OAuth.
+  const { data: existingProfile, error: lookupError } = await supabase
     .from("profiles")
-    .upsert(
-      {
+    .select("id")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (lookupError) return { error: saveError };
+
+  const roleUpdate = {
+    role,
+    onboarding_completed: false,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error } = existingProfile
+    ? await supabase.from("profiles").update(roleUpdate).eq("id", user.id)
+    : await supabase.from("profiles").insert({
         id: user.id,
         email: user.email ?? "",
-        role,
-        onboarding_completed: false,
-      },
-      { onConflict: "id" }
-    );
+        full_name: user.user_metadata.full_name ?? "",
+        ...roleUpdate,
+      });
 
   if (error) return { error: saveError };
 

@@ -60,8 +60,8 @@ export function RoleSelectForm() {
       return;
     }
 
-    toast.success("Rol setat cu succes!");
-
+    toast.success("Rol salvat. Se deschide formularul potrivit...");
+    router.refresh();
     router.replace(`/onboarding/${selected}`);
   }
 
