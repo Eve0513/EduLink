@@ -8,7 +8,7 @@ export default async function StudentProfilePage() {
   if (!user) redirect("/login");
 
   const [{ data: profile }, { data: educations }, { data: experiences }, { data: skills }, { data: projects }, { data: certificates }, { data: preferences }, { data: recommendations }] = await Promise.all([
-    supabase.from("profiles").select("full_name, email, headline, location, bio, avatar_url, qr_code_slug").eq("id", user.id).single(),
+    supabase.from("profiles").select("full_name, email, headline, location, bio, avatar_url, background_url, qr_code_slug").eq("id", user.id).single(),
     supabase.from("educations").select("id, institution_name, degree, field_of_study, start_date, end_date, is_current").eq("profile_id", user.id).order("start_date", { ascending: false }),
     supabase.from("experiences").select("id, company_name, position_title, location, work_mode, job_type, start_date, end_date, is_current, description").eq("profile_id", user.id).order("start_date", { ascending: false }),
     supabase.from("skills").select("id, name, level").eq("profile_id", user.id).order("name"),

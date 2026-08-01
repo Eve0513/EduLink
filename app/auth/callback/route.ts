@@ -2,6 +2,24 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 type PendingCookie = { name: string; value: string; options: CookieOptions };
+type ProfileRedirectData = {
+  role: "student" | "company" | "institution" | "admin" | null;
+  onboarding_completed: boolean | null;
+};
+
+function isInternalPath(value: string | null): value is string {
+  return Boolean(value?.startsWith("/") && !value.startsWith("//"));
+}
+
+function dashboardPath(profile: ProfileRedirectData, requestedNext: string | null) {
+  if (!profile.onboarding_completed) return "/onboarding";
+
+  if (isInternalPath(requestedNext) && requestedNext !== "/dashboard") return requestedNext;
+  if (profile.role === "student") return "/feed";
+  if (profile.role === "company") return "/dashboard/company";
+  if (profile.role === "institution") return "/dashboard/institution";
+  return "/onboarding";
+}
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -9,7 +27,6 @@ export async function GET(request: NextRequest) {
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type");
   const requestedNext = searchParams.get("next");
-  const next = requestedNext?.startsWith("/") && !requestedNext.startsWith("//") ? requestedNext : "/dashboard";
   const pendingCookies: PendingCookie[] = [];
   const pendingHeaders: Record<string, string> = {};
 
@@ -49,15 +66,15 @@ export async function GET(request: NextRequest) {
       ? metadata.full_name.trim()
       : [firstName, lastName].filter(Boolean).join(" ") || user.email?.split("@")[0] || "Utilizator EduLink";
 
-    const { error: profileError } = await supabase.from("profiles").upsert({
+    const { data: profile, error: profileError } = await supabase.from("profiles").upsert({
       id: user.id,
       email: user.email ?? "",
       full_name: fullName,
       first_name: firstName,
       last_name: lastName,
-    }, { onConflict: "id" });
+    }, { onConflict: "id" }).select("role, onboarding_completed").single<ProfileRedirectData>();
 
-    if (!profileError) return redirect(next);
+    if (!profileError && profile) return redirect(dashboardPath(profile, requestedNext));
   }
 
   return redirect("/auth/confirm-email?error=auth_callback_failed");

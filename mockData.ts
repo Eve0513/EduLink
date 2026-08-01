@@ -136,6 +136,27 @@ export const MOCK_COMPANIES: MockItem[] = [
   { id: "comp-19", name: "StarNet" }
 ];
 
+export const COMPANY_ROLES: MockItem[] = [
+  { id: "hr_manager", name: "HR Manager" },
+  { id: "recruiter", name: "Recruiter / Talent Acquisition" },
+  { id: "founder", name: "Founder / Co-fondator" },
+  { id: "ceo", name: "CEO / Director general" },
+  { id: "manager", name: "Manager de echipă" },
+  { id: "operations", name: "Operations Manager" },
+  { id: "marketing", name: "Marketing Manager" },
+  { id: "other", name: "Altă funcție" },
+];
+
+export const COMPANY_SIZES: MockItem[] = [
+  { id: "1-10", name: "1–10 angajați" },
+  { id: "11-50", name: "11–50 angajați" },
+  { id: "51-200", name: "51–200 angajați" },
+  { id: "201-500", name: "201–500 angajați" },
+  { id: "501-1000", name: "501–1.000 angajați" },
+  { id: "1001-5000", name: "1.001–5.000 angajați" },
+  { id: "5001-plus", name: "Peste 5.000 angajați" },
+];
+
 export const MOCK_LOCATIONS: MockItem[] = [
   { id: "loc-1", name: "Chișinău" },
   { id: "loc-2", name: "Bălți" },

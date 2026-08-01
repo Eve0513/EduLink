@@ -28,7 +28,7 @@ type ExperienceInput = {
 type SkillInput = { id?: string; name: string; level: "incepator" | "intermediar" | "avansat" };
 type ProjectInput = { id?: string; title: string; description: string; githubUrl: string; liveDemoUrl: string; technologies: string[]; imageUrl: string };
 type CertificateInput = { id?: string; title: string; issuingOrganization: string; issueDate: string | null; expiryDate: string | null; credentialUrl: string };
-type RecommendationInput = { id?: string; recipientName: string; recipientEmail: string; relationship: string; message: string };
+type RecommendationInput = { id?: string; recipientName: string; recipientEmail: string; relationship: string; message: string; sendEmail?: boolean };
 
 function userMessage() {
   return "Nu am putut salva modificările. Încearcă din nou.";
@@ -168,6 +168,7 @@ export async function saveRecommendationRequest(input: RecommendationInput): Pro
     recipient_email: recipientEmail,
     relationship: input.relationship.trim() || null,
     message: input.message.trim() || null,
+    ...(input.sendEmail ? { status: "requested" } : {}),
   };
   const query = input.id
     ? supabase.from("recommendation_requests").update(values).eq("id", input.id).eq("profile_id", user.id)

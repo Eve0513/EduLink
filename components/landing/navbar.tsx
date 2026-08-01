@@ -5,7 +5,7 @@ export function Brand() {
   return (
     <Link href="/" className="flex items-center gap-2.5" aria-label="EduLink acasă">
       <span className="grid h-11 w-11 place-items-center overflow-hidden rounded-xl bg-[#e5f4f6]">
-        <Image src="/logo.png" alt="" width={96} height={96} className="h-[62px] w-[62px] max-w-none object-cover object-[center_24%]" />
+        <Image src="/logo.png" alt="" width={64} height={64} className="h-9 w-9 object-contain" />
       </span>
       <span className="bg-gradient-to-r from-[#003747] via-[#065465] to-[#026a81] bg-clip-text text-2xl font-extrabold tracking-tight text-transparent">EduLink</span>
     </Link>

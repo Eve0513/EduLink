@@ -136,6 +136,8 @@ async function completeOrganizationOnboarding(
   const value = parsed.data;
   if (value.mode === "join" && (!value.organizationName || !value.inviteCode)) return { error: "Alege organizația și introdu codul de invitație." };
   if (value.mode === "create" && !value.organizationName) return { error: "Numele organizației este obligatoriu." };
+  if (kind === "company" && value.mode === "create" && (!value.website || !value.companySize)) return { error: "Website-ul și mărimea echipei sunt obligatorii pentru compania nouă." };
+  if (kind === "company" && value.mode === "create" && !z.string().url().safeParse(value.website).success) return { error: "Introdu o adresă web validă, de forma https://exemplu.md." };
   if (kind === "institution" && value.mode === "request" && (!value.organizationName || !value.city || !value.officialEmail || !value.organizationType)) return { error: "Completează numele, tipul, orașul și e-mailul oficial." };
 
   const supabase = await createClient();
@@ -199,6 +201,7 @@ export async function saveStudentProfileBasics(data: {
   headline: string;
   location: string;
   bio: string;
+  desiredJobTitles?: string[];
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -220,6 +223,11 @@ export async function saveStudentProfileBasics(data: {
   }).eq("id", user.id);
 
   if (error) return { error: saveError };
+  if (data.desiredJobTitles) {
+    const desiredJobTitles = [...new Set(data.desiredJobTitles.map((title) => title.trim()).filter(Boolean))].slice(0, 3);
+    const { error: preferenceError } = await supabase.from("student_preferences").upsert({ profile_id: user.id, desired_job_titles: desiredJobTitles, opportunity_types: [] }, { onConflict: "profile_id" });
+    if (preferenceError) return { error: saveError };
+  }
   revalidatePath("/dashboard/student/profile");
   revalidatePath("/dashboard/student/portfolio");
   revalidatePath("/feed");
@@ -279,4 +287,26 @@ export async function removeAvatar() {
   const { data: profile } = await supabase.from("profiles").select("qr_code_slug").eq("id", user.id).maybeSingle();
   if (profile?.qr_code_slug) revalidatePath(`/portofoliu/${profile.qr_code_slug}`);
   return { success: true };
+}
+
+export async function uploadProfileBackground(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Sesiunea a expirat. Autentifică-te din nou." };
+  const file = formData.get("file");
+  if (!(file instanceof File)) return { error: "Alege o imagine înainte de încărcare." };
+  const acceptedTypes = ["image/jpeg", "image/png", "image/webp"];
+  if (!acceptedTypes.includes(file.type) || file.size > 5 * 1024 * 1024) return { error: "Alege o imagine JPG, PNG sau WebP mai mică de 5 MB." };
+  const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+  const path = `${user.id}/backgrounds/${crypto.randomUUID()}.${extension}`;
+  const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, { upsert: false });
+  if (uploadError) return { error: "Imaginea de fundal nu a putut fi încărcată acum. Încearcă din nou." };
+  const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
+  const { error: updateError } = await supabase.from("profiles").update({ background_url: publicUrl, updated_at: new Date().toISOString() }).eq("id", user.id);
+  if (updateError) return { error: "Imaginea a fost încărcată, dar profilul nu a putut fi actualizat." };
+  revalidatePath("/dashboard/student/profile");
+  revalidatePath("/feed");
+  const { data: profile } = await supabase.from("profiles").select("qr_code_slug").eq("id", user.id).maybeSingle();
+  if (profile?.qr_code_slug) revalidatePath(`/portofoliu/${profile.qr_code_slug}`);
+  return { success: true, url: publicUrl };
 }

@@ -11,6 +11,7 @@ import {
   MapPin,
   Pencil,
   Plus,
+  QrCode,
   Save,
   ShieldCheck,
   Sparkles,
@@ -19,7 +20,7 @@ import {
 } from "lucide-react";
 import { useRef, useState, useTransition, type ReactNode } from "react";
 import { toast } from "sonner";
-import { removeAvatar, saveStudentProfileBasics, uploadAvatar } from "@/app/actions/onboarding";
+import { removeAvatar, saveStudentProfileBasics, uploadAvatar, uploadProfileBackground } from "@/app/actions/onboarding";
 import {
   deleteCertificate,
   deleteEducation,
@@ -45,6 +46,7 @@ type StudentProfile = {
   location: string | null;
   bio: string | null;
   avatar_url: string | null;
+  background_url: string | null;
   qr_code_slug: string | null;
 };
 type Education = {
@@ -100,12 +102,14 @@ export function StudentProfileClient({
     headline: profile.headline ?? "",
     location: profile.location ?? "",
     bio: profile.bio ?? "",
+    desiredJobs: desiredJobTitles.join(", "),
   });
   const [editingBasics, setEditingBasics] = useState(false);
   const [modal, setModal] = useState<ModalKind | null>(null);
   const [selected, setSelected] = useState<Selectable>(null);
   const [avatarFailed, setAvatarFailed] = useState(false);
   const avatarInput = useRef<HTMLInputElement>(null);
+  const backgroundInput = useRef<HTMLInputElement>(null);
   const [pending, startTransition] = useTransition();
   const initials = initialsFor(profile.full_name);
   const portfolioUrl = profile.qr_code_slug ? `/portofoliu/${profile.qr_code_slug}` : null;
@@ -117,7 +121,7 @@ export function StudentProfileClient({
 
   function saveBasics() {
     startTransition(async () => {
-      const result = await saveStudentProfileBasics(draft);
+      const result = await saveStudentProfileBasics({ ...draft, desiredJobTitles: draft.desiredJobs.split(",").map((title) => title.trim()).filter(Boolean) });
       if ("error" in result) {
         toast.error(result.error);
         return;
@@ -159,6 +163,17 @@ export function StudentProfileClient({
     });
   }
 
+  function chooseBackground(file: File | undefined) {
+    if (!file) return;
+    if (!file.type.match(/^image\/(jpeg|png|webp)$/) || file.size > 5 * 1024 * 1024) { toast.error("Alege o imagine JPG, PNG sau WebP mai mică de 5 MB."); return; }
+    startTransition(async () => {
+      const formData = new FormData(); formData.set("file", file);
+      const result = await uploadProfileBackground(formData);
+      if ("error" in result) { toast.error(result.error); return; }
+      toast.success("Imaginea de fundal a fost actualizată.");
+    });
+  }
+
   return (
     <main className="min-h-screen overflow-hidden bg-[#f5f8f9]">
       <StudentHeader name={profile.full_name} avatarUrl={avatarFailed ? null : profile.avatar_url} current="profile" />
@@ -167,7 +182,7 @@ export function StudentProfileClient({
       <div className="relative mx-auto grid max-w-7xl gap-6 px-4 py-7 lg:grid-cols-[minmax(0,1fr)_320px] lg:px-6">
         <section className="space-y-5">
           <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="h-28 bg-[linear-gradient(115deg,#003747,#0e5e6f_55%,#168a9b)]" />
+            <div className="relative h-28 bg-[linear-gradient(115deg,#003747,#0e5e6f_55%,#168a9b)]" style={profile.background_url ? { backgroundImage: `linear-gradient(115deg,rgba(0,55,71,.45),rgba(14,94,111,.35)), url(${profile.background_url})`, backgroundPosition: "center", backgroundSize: "cover" } : undefined}><button type="button" onClick={() => backgroundInput.current?.click()} className="absolute right-4 top-4 rounded-lg bg-white/90 px-3 py-2 text-xs font-bold text-[#0e5e6f] shadow-sm hover:bg-white"><ImagePlus className="mr-1 inline h-4 w-4" />Schimbă fundalul</button><input ref={backgroundInput} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(event) => chooseBackground(event.target.files?.[0])} /></div>
             <div className="px-5 pb-6 sm:px-7">
               <div className="-mt-14 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div className="flex items-end gap-4">
@@ -230,7 +245,7 @@ export function StudentProfileClient({
 
         <aside className="space-y-5">
           <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-sm font-bold text-slate-900">CV și portofoliu</p><p className="mt-2 text-sm leading-6 text-slate-600">Completează profilul înainte de generare, pentru rezultate mai bune.</p><Link href="/dashboard/student/ai-hub?intent=cv" className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-[#026a81] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#003747]"><Sparkles className="h-4 w-4" />Generează CV</Link><Link href="/dashboard/student/ai-hub?intent=portfolio" className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-[#0e5e6f] px-4 py-2.5 text-sm font-bold text-[#0e5e6f] hover:bg-[#e5f4f6]"><ExternalLink className="h-4 w-4" />Generează portofoliu</Link></section>
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="font-bold text-slate-900">Profil public și adresă URL</p><p className="mt-2 break-all text-sm text-slate-500">{portfolioUrl ?? "Linkul public va fi creat la finalizarea profilului."}</p>{portfolioUrl ? <><Link href={portfolioUrl} target="_blank" className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#026a81] hover:underline"><ExternalLink className="h-4 w-4" />Previzualizează profilul public</Link><Link href="/dashboard/student/portfolio" className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-[#026a81] hover:underline"><Pencil className="h-4 w-4" />Editează portofoliul</Link></> : null}</section>
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="font-bold text-slate-900">Profil public și adresă URL</p><p className="mt-2 break-all text-sm text-slate-500">{portfolioUrl ?? "Linkul public va fi creat la finalizarea profilului."}</p>{portfolioUrl && profile.qr_code_slug ? <><div className="mt-4 flex items-center gap-3 rounded-xl bg-[#f5f8f9] p-3"><img src={`/api/qr?slug=${encodeURIComponent(profile.qr_code_slug)}`} alt="Cod QR pentru portofoliul public" className="h-20 w-20 rounded-lg bg-white p-1" /><div><p className="inline-flex items-center gap-1 text-sm font-bold text-[#003747]"><QrCode className="h-4 w-4" />Cod QR pentru profil</p><a href={`/api/qr?slug=${encodeURIComponent(profile.qr_code_slug)}`} download="edulink-profil-qr.svg" className="mt-2 inline-flex text-xs font-bold text-[#026a81] hover:underline">Descarcă codul QR</a></div></div><Link href={portfolioUrl} target="_blank" className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#026a81] hover:underline"><ExternalLink className="h-4 w-4" />Previzualizează profilul public</Link><Link href="/dashboard/student/portfolio" className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-[#026a81] hover:underline"><Pencil className="h-4 w-4" />Editează portofoliul</Link></> : null}</section>
           <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="font-bold text-slate-900">Urmărește organizații</p><p className="mt-2 text-sm leading-6 text-slate-600">Găsește instituții și companii relevante în feed, apoi apasă „Urmărește”.</p><Link href="/feed" className="mt-4 inline-flex text-sm font-bold text-[#026a81] hover:underline">Mergi la recomandări</Link></section>
         </aside>
       </div>
@@ -239,8 +254,8 @@ export function StudentProfileClient({
   );
 }
 
-function BasicEditor({ draft, pending, onChange, onSave }: { draft: { fullName: string; headline: string; location: string; bio: string }; pending: boolean; onChange: (value: { fullName: string; headline: string; location: string; bio: string }) => void; onSave: () => void }) {
-  return <section className="rounded-2xl border border-[#0e5e6f]/20 bg-white p-5 shadow-sm sm:p-7"><div className="mb-5 flex items-center gap-2"><Pencil className="h-5 w-5 text-[#0e5e6f]" /><h2 className="text-lg font-extrabold text-slate-900">Editează informațiile de bază</h2></div><div className="grid gap-4 sm:grid-cols-2"><Field label="Nume complet *"><input value={draft.fullName} onChange={(event) => onChange({ ...draft, fullName: event.target.value })} className={inputClass} /></Field><Field label="Titlu dorit / preferință job"><input value={draft.headline} onChange={(event) => onChange({ ...draft, headline: event.target.value })} placeholder="Ex.: Frontend Developer Intern" className={inputClass} /></Field></div><div className="mt-4"><Field label="Locație"><input value={draft.location} onChange={(event) => onChange({ ...draft, location: event.target.value })} placeholder="Ex.: Chișinău, Moldova" className={inputClass} /></Field></div><div className="mt-4"><Field label="Despre mine"><textarea value={draft.bio} onChange={(event) => onChange({ ...draft, bio: event.target.value })} placeholder="Spune pe scurt ce te interesează și ce îți dorești să înveți." maxLength={2600} className={`${inputClass} min-h-32 resize-y`} /><p className="mt-1 text-right text-xs text-slate-400">{draft.bio.length}/2600</p></Field></div><div className="mt-5 flex justify-end"><button type="button" disabled={pending} onClick={onSave} className="inline-flex items-center gap-2 rounded-lg bg-[#026a81] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#003747] disabled:cursor-not-allowed disabled:opacity-70">{pending ? "Se salvează..." : <><Save className="h-4 w-4" />Salvează modificările</>}</button></div></section>;
+function BasicEditor({ draft, pending, onChange, onSave }: { draft: { fullName: string; headline: string; location: string; bio: string; desiredJobs: string }; pending: boolean; onChange: (value: { fullName: string; headline: string; location: string; bio: string; desiredJobs: string }) => void; onSave: () => void }) {
+  return <section className="rounded-2xl border border-[#0e5e6f]/20 bg-white p-5 shadow-sm sm:p-7"><div className="mb-5 flex items-center gap-2"><Pencil className="h-5 w-5 text-[#0e5e6f]" /><h2 className="text-lg font-extrabold text-slate-900">Editează informațiile de bază</h2></div><div className="grid gap-4 sm:grid-cols-2"><Field label="Nume complet *"><input value={draft.fullName} onChange={(event) => onChange({ ...draft, fullName: event.target.value })} className={inputClass} /></Field><Field label="Titlu dorit / preferință job"><input value={draft.headline} onChange={(event) => onChange({ ...draft, headline: event.target.value })} placeholder="Ex.: Frontend Developer Intern" className={inputClass} /></Field></div><div className="mt-4"><Field label="Preferințe job (1–3, separate prin virgulă)"><input value={draft.desiredJobs} onChange={(event) => onChange({ ...draft, desiredJobs: event.target.value })} placeholder="Ex.: Frontend Developer, Data Analyst" className={inputClass} /></Field></div><div className="mt-4"><Field label="Locație"><input value={draft.location} onChange={(event) => onChange({ ...draft, location: event.target.value })} placeholder="Ex.: Chișinău, Moldova" className={inputClass} /></Field></div><div className="mt-4"><Field label="Despre mine"><textarea value={draft.bio} onChange={(event) => onChange({ ...draft, bio: event.target.value })} placeholder="Spune pe scurt ce te interesează și ce îți dorești să înveți." maxLength={2600} className={`${inputClass} min-h-32 resize-y`} /><p className="mt-1 text-right text-xs text-slate-400">{draft.bio.length}/2600</p></Field></div><div className="mt-5 flex justify-end"><button type="button" disabled={pending} onClick={onSave} className="inline-flex items-center gap-2 rounded-lg bg-[#026a81] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#003747] disabled:cursor-not-allowed disabled:opacity-70">{pending ? "Se salvează..." : <><Save className="h-4 w-4" />Salvează modificările</>}</button></div></section>;
 }
 
 function ProfileModal({ kind, selected, onClose }: { kind: ModalKind; selected: Selectable; onClose: () => void }) {
@@ -262,9 +277,17 @@ function ProfileModal({ kind, selected, onClose }: { kind: ModalKind; selected: 
       else if (kind === "skill") result = await saveSkill({ id: skill?.id, name: form.name, level: form.level as Skill["level"] });
       else if (kind === "project") result = await saveProject({ id: project?.id, title: form.title, description: form.description, githubUrl: form.githubUrl, liveDemoUrl: form.liveDemoUrl, technologies: form.technologies.split(",").map((item) => item.trim()).filter(Boolean), imageUrl: form.imageUrl });
       else if (kind === "certificate") result = await saveCertificate({ id: certificate?.id, title: form.title, issuingOrganization: form.organization, issueDate: form.issueDate || null, expiryDate: form.expiryDate || null, credentialUrl: form.credentialUrl });
-      else result = await saveRecommendationRequest({ id: recommendation?.id, recipientName: form.recipientName, recipientEmail: form.recipientEmail, relationship: form.relationship, message: form.message });
+      else result = await saveRecommendationRequest({ id: recommendation?.id, recipientName: form.recipientName, recipientEmail: form.recipientEmail, relationship: form.relationship, message: form.message, sendEmail: true });
       if ("error" in result) { toast.error(result.error); return; }
-      toast.success(kind === "recommendation" ? "Cererea de recomandare a fost salvată ca privată." : "Secțiunea a fost salvată.");
+      if (kind === "recommendation") {
+        const subject = encodeURIComponent("Solicitare recomandare EduLink");
+        const body = encodeURIComponent(form.message.trim() || "Bună ziua,\n\nVă rog să îmi oferiți o recomandare pentru profilul meu EduLink.\n\nVă mulțumesc!");
+        toast.success("Cererea a fost salvată. Se deschide aplicația de e-mail.");
+        onClose();
+        window.location.assign(`mailto:${encodeURIComponent(form.recipientEmail)}?subject=${subject}&body=${body}`);
+        return;
+      }
+      toast.success("Secțiunea a fost salvată.");
       onClose();
     });
   }
