@@ -24,7 +24,7 @@ export function DashboardSidebar({ currentPath }: DashboardSidebarProps) {
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col justify-between border-r border-border bg-card p-4 md:flex">
       <div className="space-y-6">
         <Link href="/dashboard" className="flex items-center gap-2 px-2">
-          <Image src="/logo.png" alt="EduLink" width={28} height={28} />
+          <Image src="/edulink-logo-icon.png" alt="EduLink" width={28} height={28} />
           <span className="text-lg font-bold tracking-tight text-primary">
             EduLink
           </span>

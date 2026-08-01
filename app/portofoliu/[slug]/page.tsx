@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Award, BriefcaseBusiness, Code2, ExternalLink, GraduationCap, Mail, MapPin } from "lucide-react";
 import type { ReactNode } from "react";
@@ -54,12 +55,12 @@ export default async function PortfolioPage({ params }: PortfolioPageProps) {
     <main className="min-h-screen bg-[#e9f1f5] text-slate-900">
       <header className="sticky top-0 z-20 border-b border-white/70 bg-[#e9f1f5]/95 backdrop-blur">
         <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
-          <a href="#acasa" className="inline-flex items-center gap-2 font-extrabold text-[#003747]">
+          <Link href="/" className="inline-flex items-center gap-2 font-extrabold text-[#003747]" aria-label="Înapoi la pagina principală EduLink">
             <span className="grid h-9 w-9 place-items-center overflow-hidden rounded-xl bg-white shadow-sm">
-              <Image src="/logo.png" alt="EduLink" width={64} height={64} className="h-8 w-8 object-contain" />
+              <Image src="/edulink-logo-icon.png" alt="EduLink" width={64} height={64} className="h-8 w-8 object-contain" />
             </span>
             EduLink
-          </a>
+          </Link>
           <div className="hidden items-center gap-4 text-sm font-semibold text-slate-600 sm:flex">
             <a href="#studii" className="hover:text-[#026a81]">Studii</a>
             <a href="#experienta" className="hover:text-[#026a81]">Experiență</a>

@@ -31,10 +31,19 @@ export async function updateUserRole(role: UserRole) {
     return { error: "Neautentificat" };
   }
 
+  // The auth trigger normally creates this row. Upsert keeps the first
+  // onboarding step usable while that trigger is still being committed.
   const { error } = await supabase
     .from("profiles")
-    .update({ role })
-    .eq("id", user.id);
+    .upsert(
+      {
+        id: user.id,
+        email: user.email ?? "",
+        role,
+        onboarding_completed: false,
+      },
+      { onConflict: "id" }
+    );
 
   if (error) return { error: saveError };
 
@@ -161,6 +170,17 @@ async function completeOrganizationOnboarding(
   });
   if (error || !result || typeof result !== "object") return { error: "Nu am putut finaliza onboarding-ul. Verifică datele sau codul de invitație." };
   const response = result as { invite_code?: string; pending?: boolean };
+  if (!response.pending) {
+    const { error: profileError } = await supabase.from("profiles").update({
+      role: kind,
+      onboarding_completed: true,
+      full_name: `${value.firstName} ${value.lastName}`,
+      first_name: value.firstName,
+      last_name: value.lastName,
+      updated_at: new Date().toISOString(),
+    }).eq("id", user.id);
+    if (profileError) return { error: "Datele organizației au fost salvate, dar profilul nu a putut fi finalizat. Încearcă din nou." };
+  }
   revalidatePath("/onboarding");
   revalidatePath(`/dashboard/${kind}`);
   return { success: true, inviteCode: response.invite_code ?? null, pending: response.pending === true };

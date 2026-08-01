@@ -74,7 +74,12 @@ export async function GET(request: NextRequest) {
       last_name: lastName,
     }, { onConflict: "id" }).select("role, onboarding_completed").single<ProfileRedirectData>();
 
+    // Session exchange is already successful at this point. A profile trigger
+    // can still be completing during a first OAuth sign-in, so never discard a
+    // valid session or send the person back to the auth screen because this
+    // best-effort profile upsert was delayed by the database.
     if (!profileError && profile) return redirect(dashboardPath(profile, requestedNext));
+    return redirect("/onboarding");
   }
 
   return redirect("/auth/confirm-email?error=auth_callback_failed");

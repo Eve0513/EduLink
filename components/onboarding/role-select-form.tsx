@@ -62,8 +62,7 @@ export function RoleSelectForm() {
 
     toast.success("Rol setat cu succes!");
 
-    router.refresh();
-    router.push(`/onboarding/${selected}`);
+    router.replace(`/onboarding/${selected}`);
   }
 
   return (

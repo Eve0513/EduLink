@@ -242,6 +242,11 @@ Păstrezi exact perioadele, numele organizațiilor și statutul de verificare pr
 
 COMPLETITATE:
 - Include fiecare educație, experiență, proiect, certificat și competență nevidă.
+- Preserve all distinct factual details from the profile biography and each
+  experience/project description. Do not reduce a detailed biography to a
+  generic one-sentence summary. When the supplied biography contains at least
+  350 characters, the professional_summary should normally retain 350-800
+  characters of its factual content, written clearly and without repetition.
 - Pentru fiecare experiență și proiect, creează 1-5 bullet-uri doar din descrierea
   furnizată. Dacă descrierea nu conține suficiente fapte, folosește mai puține
   bullet-uri; nu completa golurile cu presupuneri.

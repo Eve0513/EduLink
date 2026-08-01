@@ -5,7 +5,7 @@ import { GraduationCap, ShieldCheck } from "lucide-react";
 interface AuthLayoutProps { children: React.ReactNode; title: string; subtitle: string; }
 
 export function EduLinkMark({ light = false }: { light?: boolean }) {
-  return <Link href="/" className="inline-flex items-center gap-2.5" aria-label="EduLink acasă"><span className={`grid h-11 w-11 place-items-center overflow-hidden rounded-xl ${light ? "bg-white shadow-sm" : "bg-[#e5f4f6]"}`}><Image src="/logo.png" alt="" width={64} height={64} className="h-9 w-9 object-contain" /></span><span className={`bg-gradient-to-r ${light ? "from-white to-[#a6eff3]" : "from-[#003747] via-[#065465] to-[#026a81]"} bg-clip-text text-2xl font-extrabold tracking-tight text-transparent`}>EduLink</span></Link>;
+  return <Link href="/" className="inline-flex items-center gap-2.5" aria-label="EduLink acasă"><span className={`grid h-11 w-11 place-items-center overflow-hidden rounded-xl ${light ? "bg-white shadow-sm" : "bg-[#e5f4f6]"}`}><Image src="/edulink-logo-icon.png" alt="" width={64} height={64} className="h-9 w-9 object-contain" /></span><span className={`bg-gradient-to-r ${light ? "from-white to-[#a6eff3]" : "from-[#003747] via-[#065465] to-[#026a81]"} bg-clip-text text-2xl font-extrabold tracking-tight text-transparent`}>EduLink</span></Link>;
 }
 
 export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {

@@ -30,17 +30,21 @@ const styles = StyleSheet.create({
     fontSize: 9.5,
     lineHeight: 1.45,
   },
-  name: { color: colors.teal, fontSize: 20, letterSpacing: 0.2, lineHeight: 1.15 },
-  role: { fontSize: 10.5, marginTop: 5 },
-  contact: { color: colors.muted, fontSize: 8.5, marginTop: 6 },
+  // The header uses deliberately independent vertical spacing. React-PDF can
+  // otherwise visually overlap a long name and its headline on narrow PDF
+  // renderers, even when the browser preview looks correct.
+  header: { paddingBottom: 6 },
+  name: { color: colors.teal, fontSize: 16, letterSpacing: 0.15, lineHeight: 1.55 },
+  role: { fontSize: 10.2, marginTop: 6, lineHeight: 1.4 },
+  contact: { color: colors.muted, fontSize: 8.5, marginTop: 7, lineHeight: 1.4 },
   divider: { borderBottomColor: colors.teal, borderBottomWidth: 2, marginTop: 12 },
   section: { marginTop: 14 },
   sectionTitle: { color: colors.teal, fontSize: 10, letterSpacing: 0.8, marginBottom: 5, textTransform: "uppercase" },
   body: { color: colors.ink, fontSize: 9.3, lineHeight: 1.45 },
   entry: { marginBottom: 8 },
-  entryHeader: { flexDirection: "row", justifyContent: "space-between", gap: 12 },
-  entryTitle: { fontSize: 9.7, flexGrow: 1 },
-  dates: { color: colors.muted, fontSize: 8.3 },
+  entryHeader: { flexDirection: "row", justifyContent: "space-between", gap: 10, alignItems: "flex-start" },
+  entryTitle: { fontSize: 9.7, width: "68%", lineHeight: 1.28 },
+  dates: { color: colors.muted, fontSize: 8.3, width: "32%", textAlign: "right", lineHeight: 1.28 },
   metadata: { color: colors.muted, fontSize: 8.4, marginTop: 1 },
   bullet: { flexDirection: "row", gap: 5, marginTop: 2 },
   bulletMark: { color: colors.teal },
@@ -102,9 +106,11 @@ export function CVPdfDocument({ cv }: { cv: GeneratedCV }) {
   return (
     <Document title={`CV - ${cv.contact.full_name}`} author="EduLink">
       <Page size="A4" style={styles.page}>
-        <Text style={styles.name}>{cv.contact.full_name}</Text>
-        <Text style={styles.role}>{cv.target_role_inferred}</Text>
-        {contact ? <Text style={styles.contact}>{contact}</Text> : null}
+        <View style={styles.header}>
+          <Text style={styles.name}>{cv.contact.full_name}</Text>
+          <Text style={styles.role}>{cv.target_role_inferred}</Text>
+          {contact ? <Text style={styles.contact}>{contact}</Text> : null}
+        </View>
         <View style={styles.divider} />
 
         {cv.professional_summary ? (

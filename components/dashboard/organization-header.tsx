@@ -43,7 +43,7 @@ export function OrganizationHeader({ kind, organizationName }: { kind: Organizat
       <div className="mx-auto flex min-h-[72px] max-w-7xl items-center gap-3 px-4 sm:px-6">
         <Link href={dashboardPath} className="flex shrink-0 items-center gap-2" aria-label="EduLink – pagina principală">
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#e5f4f6] p-1.5">
-            <Image src="/logo.png" alt="" width={40} height={40} className="h-full w-full object-contain" priority />
+            <Image src="/edulink-logo-icon.png" alt="" width={40} height={40} className="h-full w-full object-contain" priority />
           </span>
           <span className="hidden bg-gradient-to-r from-[#003747] via-[#065465] to-[#026a81] bg-clip-text text-xl font-extrabold text-transparent sm:inline">EduLink</span>
         </Link>
@@ -76,6 +76,12 @@ export function OrganizationHeader({ kind, organizationName }: { kind: Organizat
           </div> : null}
         </div>
       </div>
+      <form onSubmit={submitSearch} className="border-t border-slate-100 px-4 py-2 md:hidden">
+        <label className="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-2 text-slate-500 focus-within:ring-2 focus-within:ring-[#026a81]/25">
+          <Search className="h-4 w-4" />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Caută în EduLink" className="min-w-0 flex-1 bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400" />
+        </label>
+      </form>
     </header>
   );
 }

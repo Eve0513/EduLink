@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { romanianDateToIso } from "@/lib/romanian-date";
 
 type ActionResult = { success: true } | { error: string };
 type EducationInput = {
@@ -34,6 +35,12 @@ function userMessage() {
   return "Nu am putut salva modificările. Încearcă din nou.";
 }
 
+function storedDate(value: string | null | undefined) {
+  if (!value) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  return romanianDateToIso(value);
+}
+
 async function getCurrentUser() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -52,8 +59,11 @@ async function refreshStudentProfile(profileId: string) {
 export async function saveEducation(input: EducationInput): Promise<ActionResult> {
   const { supabase, user } = await getCurrentUser();
   if (!user) return { error: "Sesiunea a expirat. Autentifică-te din nou." };
-  if (!input.institutionName.trim() || !input.fieldOfStudy.trim() || !input.startDate) return { error: "Completează instituția, specializarea și data începerii." };
-  const values = { profile_id: user.id, institution_name: input.institutionName.trim(), degree: input.degree, field_of_study: input.fieldOfStudy.trim(), start_date: input.startDate, end_date: input.isCurrent ? null : input.endDate, is_current: input.isCurrent };
+  const startDate = storedDate(input.startDate);
+  const endDate = storedDate(input.endDate);
+  if (!input.institutionName.trim() || !input.fieldOfStudy.trim() || !startDate) return { error: "Completează instituția, specializarea și data începerii în formatul dd/mm/yyyy." };
+  if (!input.isCurrent && input.endDate && !endDate) return { error: "Folosește formatul dd/mm/yyyy pentru data finalizării." };
+  const values = { profile_id: user.id, institution_name: input.institutionName.trim(), degree: input.degree, field_of_study: input.fieldOfStudy.trim(), start_date: startDate, end_date: input.isCurrent ? null : endDate, is_current: input.isCurrent };
   const query = input.id ? supabase.from("educations").update(values).eq("id", input.id).eq("profile_id", user.id) : supabase.from("educations").insert(values);
   const { error } = await query;
   if (error) return { error: userMessage() };
@@ -73,8 +83,11 @@ export async function deleteEducation(id: string): Promise<ActionResult> {
 export async function saveExperience(input: ExperienceInput): Promise<ActionResult> {
   const { supabase, user } = await getCurrentUser();
   if (!user) return { error: "Sesiunea a expirat. Autentifică-te din nou." };
-  if (!input.positionTitle.trim() || !input.startDate) return { error: "Completează titlul funcției și data începerii." };
-  const values = { profile_id: user.id, position_title: input.positionTitle.trim(), company_name: input.companyName.trim() || null, location: input.location.trim() || null, work_mode: input.workMode, job_type: input.jobType, start_date: input.startDate, end_date: input.isCurrent ? null : input.endDate, is_current: input.isCurrent, description: input.description.trim() || null };
+  const startDate = storedDate(input.startDate);
+  const endDate = storedDate(input.endDate);
+  if (!input.positionTitle.trim() || !startDate) return { error: "Completează titlul funcției și data începerii în formatul dd/mm/yyyy." };
+  if (!input.isCurrent && input.endDate && !endDate) return { error: "Folosește formatul dd/mm/yyyy pentru data finalizării." };
+  const values = { profile_id: user.id, position_title: input.positionTitle.trim(), company_name: input.companyName.trim() || null, location: input.location.trim() || null, work_mode: input.workMode, job_type: input.jobType, start_date: startDate, end_date: input.isCurrent ? null : endDate, is_current: input.isCurrent, description: input.description.trim() || null };
   const query = input.id ? supabase.from("experiences").update(values).eq("id", input.id).eq("profile_id", user.id) : supabase.from("experiences").insert(values);
   const { error } = await query;
   if (error) return { error: userMessage() };
@@ -136,8 +149,11 @@ export async function deleteProject(id: string): Promise<ActionResult> {
 export async function saveCertificate(input: CertificateInput): Promise<ActionResult> {
   const { supabase, user } = await getCurrentUser();
   if (!user) return { error: "Sesiunea a expirat. Autentifică-te din nou." };
+  const issueDate = storedDate(input.issueDate);
+  const expiryDate = storedDate(input.expiryDate);
   if (!input.title.trim() || !input.issuingOrganization.trim()) return { error: "Completează denumirea și organizația emitentă." };
-  const values = { profile_id: user.id, title: input.title.trim(), issuing_organization: input.issuingOrganization.trim(), issue_date: input.issueDate, expiry_date: input.expiryDate, credential_url: input.credentialUrl.trim() || null };
+  if ((input.issueDate && !issueDate) || (input.expiryDate && !expiryDate)) return { error: "Folosește formatul dd/mm/yyyy pentru datele certificatului." };
+  const values = { profile_id: user.id, title: input.title.trim(), issuing_organization: input.issuingOrganization.trim(), issue_date: issueDate, expiry_date: expiryDate, credential_url: input.credentialUrl.trim() || null };
   const query = input.id ? supabase.from("certificates").update(values).eq("id", input.id).eq("profile_id", user.id) : supabase.from("certificates").insert(values);
   const { error } = await query;
   if (error) return { error: userMessage() };
