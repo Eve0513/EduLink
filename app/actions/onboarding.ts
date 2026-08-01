@@ -163,14 +163,18 @@ export async function uploadAvatar(formData: FormData) {
   const file = formData.get("file") as File | null;
   if (!file) return { error: "Niciun fișier selectat" };
 
-  const ext = file.name.split(".").pop();
+  const acceptedTypes = ["image/jpeg", "image/png", "image/webp"];
+  if (!acceptedTypes.includes(file.type) || file.size > 5 * 1024 * 1024) {
+    return { error: "Alege o imagine JPG, PNG sau WebP mai mică de 5 MB." };
+  }
+  const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
   const fileName = `${user.id}/${crypto.randomUUID()}.${ext}`;
 
   const { error: uploadError } = await supabase.storage
     .from("avatars")
     .upload(fileName, file, { upsert: true });
 
-  if (uploadError) return { error: uploadError.message };
+  if (uploadError) return { error: "Imaginea nu a putut fi încărcată acum. Încearcă din nou." };
 
   const {
     data: { publicUrl },
@@ -181,8 +185,19 @@ export async function uploadAvatar(formData: FormData) {
     .update({ avatar_url: publicUrl })
     .eq("id", user.id);
 
-  if (updateError) return { error: updateError.message };
+  if (updateError) return { error: "Imaginea a fost încărcată, dar profilul nu a putut fi actualizat. Încearcă din nou." };
 
   revalidatePath("/dashboard/student/profile");
   return { success: true, url: publicUrl };
+}
+
+export async function removeAvatar() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Sesiunea a expirat. Autentifică-te din nou." };
+  const { error } = await supabase.from("profiles").update({ avatar_url: null }).eq("id", user.id);
+  if (error) return { error: "Fotografia nu a putut fi eliminată acum. Încearcă din nou." };
+  revalidatePath("/dashboard/student/profile");
+  revalidatePath("/feed");
+  return { success: true };
 }

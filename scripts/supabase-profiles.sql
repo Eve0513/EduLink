@@ -204,6 +204,21 @@ create table if not exists public.student_preferences (
   updated_at timestamptz not null default timezone('utc', now())
 );
 
+-- Recommendation requests contain contact data and must remain private until
+-- a future consented publishing workflow explicitly releases a recommendation.
+create table if not exists public.recommendation_requests (
+  id uuid primary key default gen_random_uuid(),
+  profile_id uuid not null references public.profiles(id) on delete cascade,
+  recipient_name text not null check (char_length(trim(recipient_name)) between 2 and 160),
+  recipient_email citext not null check (recipient_email ~* '^[^@[:space:]]+@[^@[:space:]]+\\.[^@[:space:]]+$'),
+  relationship text,
+  message text check (message is null or char_length(message) <= 1500),
+  status text not null default 'draft' check (status in ('draft', 'requested', 'received', 'declined')),
+  recommendation_text text check (recommendation_text is null or char_length(recommendation_text) <= 4000),
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now())
+);
+
 create table if not exists public.institution_requests (
   id uuid primary key default gen_random_uuid(),
   requested_by uuid not null references public.profiles(id) on delete cascade,
@@ -262,6 +277,7 @@ alter table public.institutions enable row level security;
 alter table public.company_members enable row level security;
 alter table public.institution_members enable row level security;
 alter table public.student_preferences enable row level security;
+alter table public.recommendation_requests enable row level security;
 alter table public.institution_requests enable row level security;
 alter table public.follows enable row level security;
 
@@ -276,6 +292,9 @@ do $$ begin
 exception when duplicate_object then null; end $$;
 do $$ begin
   create policy "student preferences private" on public.student_preferences for all using (profile_id = auth.uid()) with check (profile_id = auth.uid());
+exception when duplicate_object then null; end $$;
+do $$ begin
+  create policy "recommendation requests private" on public.recommendation_requests for all using (profile_id = auth.uid()) with check (profile_id = auth.uid());
 exception when duplicate_object then null; end $$;
 do $$ begin
   create policy "institution requests own" on public.institution_requests for insert with check (requested_by = auth.uid());

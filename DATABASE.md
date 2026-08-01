@@ -318,7 +318,7 @@
 
 ### `degree_type`
 
-`licenta` | `master` | `doctorat` | `bacalaureat`
+`licenta` | `master` | `doctorat` | `bacalaureat` | `bacalaureat_licenta`
 
 ## RLS Policies
 
@@ -330,10 +330,10 @@
 | `Utilizatorii își pot crea doar propriul profil` | INSERT | public | PERMISSIVE | — | `(auth.uid() = id)` |
 | `Utilizatorii își pot modifica doar propriul profil` | UPDATE | public | PERMISSIVE | `(auth.uid() = id)` | `(auth.uid() = id)` |
 | `Utilizatorii își pot șterge doar propriul profil` | DELETE | public | PERMISSIVE | `(auth.uid() = id)` | — |
-| `Users can delete their own profile` | DELETE | public | PERMISSIVE | `(auth.uid() = id)` | — |
-| `Profiles are publicly readable` | SELECT | public | PERMISSIVE | `true` | — |
 | `Users can insert their own profile` | INSERT | public | PERMISSIVE | — | `(auth.uid() = id)` |
 | `Users can update their own profile` | UPDATE | public | PERMISSIVE | `(auth.uid() = id)` | `(auth.uid() = id)` |
+| `Users can delete their own profile` | DELETE | public | PERMISSIVE | `(auth.uid() = id)` | — |
+| `Profiles are publicly readable` | SELECT | public | PERMISSIVE | `true` | — |
 
 ### `educations`
 
@@ -454,8 +454,6 @@
 |--------|---------|-------|--------|-------|------------|
 | `institution requests own` | INSERT | public | PERMISSIVE | — | `(requested_by = auth.uid())` |
 | `institution requests requester read` | SELECT | public | PERMISSIVE | `(requested_by = auth.uid())` | — |
-
-
 
 -- WARNING: This schema is for context only and is not meant to be run.
 -- Table order and constraints may not be valid for execution.

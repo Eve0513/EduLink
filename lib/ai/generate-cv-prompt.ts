@@ -41,7 +41,6 @@ export interface EduLinkEducation {
   institution_name: string;
   start_date: string; // ISO
   end_date: string | null; // null => "În curs"
-  gpa: number | null; // 1.00 - 10.00
 }
 
 export interface EduLinkExperience {
@@ -214,9 +213,6 @@ response_format. Nicio propoziție în afara JSON-ului. Niciun code fence
 // ----------------------------------------------------------------------------
 
 export const CV_JSON_SCHEMA = {
-  name: "edulink_generated_cv",
-  strict: true,
-  schema: {
     type: "object",
     additionalProperties: false,
     required: [
@@ -266,7 +262,6 @@ export const CV_JSON_SCHEMA = {
             "institution_name",
             "start_date",
             "end_date",
-            "gpa",
           ],
           properties: {
             degree_level: { type: "string" },
@@ -274,7 +269,6 @@ export const CV_JSON_SCHEMA = {
             institution_name: { type: "string" },
             start_date: { type: "string" },
             end_date: { type: ["string", "null"] },
-            gpa: { type: ["number", "null"] },
           },
         },
       },
@@ -408,7 +402,6 @@ export const CV_JSON_SCHEMA = {
         },
       },
     },
-  },
 } as const;
 
 // ----------------------------------------------------------------------------
