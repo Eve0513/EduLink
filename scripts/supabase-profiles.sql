@@ -322,3 +322,18 @@ create policy "only company admins can create jobs" on public.jobs
 create index if not exists post_reactions_post_idx on public.post_reactions (post_id);
 create index if not exists job_applications_job_idx on public.job_applications (job_id, created_at desc);
 create index if not exists job_applications_student_idx on public.job_applications (student_id, created_at desc);
+
+-- Keep the jobs trigger aligned with the actual FK: company_id stores the company profile id.
+create or replace function public.enforce_company_job_creator()
+returns trigger language plpgsql security definer set search_path = public
+as $$
+begin
+  if not exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'company' and p.onboarding_completed) then
+    raise exception 'Doar conturile companie finalizate pot publica joburi';
+  end if;
+  if new.company_id is distinct from auth.uid() and not public.is_company_admin(new.company_id) then
+    raise exception 'Utilizatorul nu este administrator al companiei selectate';
+  end if;
+  return new;
+end;
+$$;

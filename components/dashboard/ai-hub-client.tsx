@@ -2,7 +2,7 @@
 
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { ExternalLink, FileDown, Loader2, Sparkles, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { StudentHeader } from "@/components/dashboard/student-header";
@@ -27,12 +27,11 @@ export function AIHubClient({
   const params = useSearchParams();
   const [generating, setGenerating] = useState(false);
   const [generatedCV, setGeneratedCV] = useState<GeneratedCV | null>(null);
-  const [intent, setIntent] = useState<Intent>(null);
-
-  useEffect(() => {
+  const [intent, setIntent] = useState<Intent>(() => {
     const value = params.get("intent");
-    if (value === "cv" || value === "portfolio") setIntent(value);
-  }, [params]);
+    return value === "cv" || value === "portfolio" ? value : null;
+  });
+
 
   async function handleGenerateCV() {
     setIntent(null);

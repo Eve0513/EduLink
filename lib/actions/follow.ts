@@ -28,5 +28,6 @@ export async function toggleFollow(targetType: FollowTargetType, targetId: strin
   const { error } = await mutation;
   if (error) return { error: "Nu am putut actualiza urmărirea acum. Încearcă din nou." };
   revalidatePath("/feed");
+  if (targetType === "company" || targetType === "institution") revalidatePath(`/organizations/${targetType}/${targetId}`);
   return { following: !current };
 }

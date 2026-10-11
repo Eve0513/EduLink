@@ -1,10 +1,9 @@
 "use client";
 
-import { CalendarDays, ExternalLink, FileText, ImagePlus, MapPin, Pencil, Plus, Send, Upload, X } from "lucide-react";
+import { CalendarDays, ExternalLink, FileText, ImagePlus, Pencil, Send, X } from "lucide-react";
 import { type FormEvent, type ReactNode, useState } from "react";
 import { toast } from "sonner";
 import { uploadFeedImage } from "@/app/actions/media";
-import { uploadProfileMedia } from "@/app/actions/student-profile";
 import { createCompanyJob, createOrganizationEvent, createOrganizationPost, updateOrganizationProfile, uploadOrganizationImage, type OrganizationKind } from "@/app/actions/organization-content";
 import { InviteCodeCard } from "@/components/dashboard/invite-code-card";
 import { OrganizationHeader } from "@/components/dashboard/organization-header";

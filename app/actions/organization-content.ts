@@ -13,9 +13,6 @@ type UploadResult = { success: true; url: string } | { error: string };
 
 const eventTypes = ["academic_lecture", "workshop_training", "hackathon_contest", "student_project", "career_fair", "networking_meetup", "volunteer_charity", "webinar_online", "sports_recreation", "other"] as const;
 const degreeTypes = ["bacalaureat", "licenta", "master", "doctorat"] as const;
-const imageUrlSchema = z.string().url("Adresa imaginii nu este validă.").nullable().optional();
-
-const postSchema = z.object({ content: z.string().trim().min(1, "Scrie un mesaj pentru anunț.").max(3_000), imageUrl: imageUrlSchema });
 const optionalPostSchema = z.object({
   content: z.string().trim().min(1).max(3_000),
   imageUrl: z.string().url().nullable().optional(),
@@ -41,7 +38,6 @@ const jobSchema = z.object({
   jobType: z.enum(["fulltime", "parttime", "contract", "volunteer", "temporary", "internship", "other"]),
   degreeRequired: z.enum(degreeTypes).optional().or(z.literal("")),
   rejectionMessage: z.string().trim().max(3_000),
-  cvUploadUrl: z.string().url().optional().or(z.literal("")),
   applicationLink: z.string().url().optional().or(z.literal("")),
   deadline: z.string().refine((value) => value === "" || romanianDateToIso(value) !== null, "Folosește data în formatul dd/mm/yyyy."),
 });
@@ -58,6 +54,13 @@ const organizationProfileSchema = z.object({
 
 function safeError() {
   return "Acțiunea nu a putut fi finalizată acum. Încearcă din nou.";
+}
+
+function jobDatabaseError(error: { code?: string | null }) {
+  if (error.code === "23503") return "Compania nu este asociată corect contului. Reîncarcă pagina companiei și încearcă din nou.";
+  if (error.code === "42501") return "Acest cont nu are dreptul de a publica joburi. Doar administratorul companiei poate publica.";
+  if (error.code === "23505") return "Acest job a fost deja publicat. Reîncarcă pagina pentru a-l vedea.";
+  return safeError();
 }
 
 async function currentOrganization(kind: OrganizationKind) {
@@ -93,7 +96,7 @@ function refreshOrganization(kind: OrganizationKind) {
   revalidatePath("/feed");
 }
 
-export async function createOrganizationPost(input: z.infer<typeof postSchema>): Promise<ActionResult> {
+export async function createOrganizationPost(input: z.infer<typeof optionalPostSchema>): Promise<ActionResult> {
   const parsed = optionalPostSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Verifică anunțul." };
   const active = await currentAuthorizedOrganization();
@@ -149,11 +152,10 @@ export async function createCompanyJob(input: z.infer<typeof jobSchema>): Promis
     job_type: parsed.data.jobType,
     degree_required: parsed.data.degreeRequired || null,
     rejection_message: parsed.data.rejectionMessage || null,
-    cv_upload_url: parsed.data.cvUploadUrl || null,
     application_link: parsed.data.applicationLink || null,
     application_deadline: deadline,
   });
-  if (error) return { error: safeError() };
+  if (error) return { error: jobDatabaseError(error) };
   revalidatePath("/dashboard/company");
   revalidatePath("/marketplace");
   return { success: true };

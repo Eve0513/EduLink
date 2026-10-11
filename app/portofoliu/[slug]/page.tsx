@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Award, BriefcaseBusiness, Code2, ExternalLink, GraduationCap, Mail, MapPin } from "lucide-react";
 import type { ReactNode } from "react";
+import { FollowButton } from "@/components/feed/follow-button";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { createClient } from "@/lib/supabase/server";
 
@@ -20,6 +21,7 @@ type PublicProfile = {
   location: string | null;
   email: string | null;
   role: "student" | "company" | "institution" | "admin";
+  followers_count: number | null;
 };
 type PublicEducation = { id: string; institution_name: string; degree: string; field_of_study: string; start_date: string; end_date: string | null; is_current: boolean | null };
 type PublicExperience = { id: string; company_name: string | null; position_title: string; location: string | null; start_date: string; end_date: string | null; is_current: boolean | null; description: string | null };
@@ -32,7 +34,7 @@ export default async function PortfolioPage({ params }: PortfolioPageProps) {
   const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id,full_name,headline,bio,avatar_url,background_url,location,email,role")
+    .select("id,full_name,headline,bio,avatar_url,background_url,location,email,role,followers_count")
     .eq("qr_code_slug", slug)
     .single<PublicProfile>();
   if (!profile) notFound();
@@ -41,6 +43,9 @@ export default async function PortfolioPage({ params }: PortfolioPageProps) {
     const { data: organization } = await supabase.from(table).select("id").eq("created_by", profile.id).maybeSingle();
     if (organization?.id) redirect("/organizations/" + profile.role + "/" + organization.id);
   }
+
+  const { data: { user: viewer } } = await supabase.auth.getUser();
+  const { data: ownFollow } = viewer ? await supabase.from("follows").select("id").eq("follower_id", viewer.id).eq("target_type", "user").eq("target_id", profile.id).maybeSingle() : { data: null };
 
   const [{ data: educationData }, { data: experienceData }, { data: projectData }, { data: skillData }, { data: certificateData }] = await Promise.all([
     supabase.from("educations").select("id,institution_name,degree,field_of_study,start_date,end_date,is_current").eq("profile_id", profile.id).order("start_date", { ascending: false }),
@@ -90,7 +95,7 @@ export default async function PortfolioPage({ params }: PortfolioPageProps) {
             </div>
             <div className="mt-5 flex flex-wrap gap-2">
               {profile.location ? <span className="inline-flex items-center gap-1 rounded-full bg-white/75 px-3 py-1.5 text-sm font-semibold text-slate-700"><MapPin className="h-3.5 w-3.5 text-[#026a81]" />{profile.location}</span> : null}
-              {profile.email ? <a href={`mailto:${profile.email}`} className="inline-flex items-center gap-1 rounded-full bg-[#026a81] px-3 py-1.5 text-sm font-bold text-white hover:bg-[#003747]"><Mail className="h-3.5 w-3.5" />Contact</a> : null}
+              {profile.email ? <a href={`mailto:${profile.email}`} className="inline-flex items-center gap-1 rounded-full bg-[#026a81] px-3 py-1.5 text-sm font-bold text-white hover:bg-[#003747]"><Mail className="h-3.5 w-3.5" />Contact</a> : null}{viewer?.id !== profile.id ? <FollowButton targetType="user" targetId={profile.id} initialIsFollowing={Boolean(ownFollow)} initialFollowerCount={profile.followers_count ?? 0} /> : null}
             </div>
           </article>
 
