@@ -337,3 +337,23 @@ begin
   return new;
 end;
 $$;
+-- Employer workflow: companies can update the status of applications to their jobs.
+drop policy if exists "companies_update_job_application_status" on public.job_applications;
+create policy "companies_update_job_application_status"
+on public.job_applications
+for update
+to authenticated
+using (
+  exists (
+    select 1 from public.jobs job
+    where job.id = job_applications.job_id
+      and job.company_id = auth.uid()
+  )
+)
+with check (
+  exists (
+    select 1 from public.jobs job
+    where job.id = job_applications.job_id
+      and job.company_id = auth.uid()
+  )
+);

@@ -59,8 +59,8 @@ export function OrganizationHeader({ kind, organizationName }: { kind: Organizat
           <Link href={dashboardPath} className="flex h-full min-w-14 flex-col items-center justify-center gap-0.5 border-b-2 border-[#0e5e6f] px-2 text-xs font-semibold text-[#0e5e6f]">
             <Home className="h-4 w-4" />Acasă
           </Link>
-          {kind === "company" ? <Link href={`${dashboardPath}#job-post`} className="flex h-full min-w-16 flex-col items-center justify-center gap-0.5 border-b-2 border-transparent px-2 text-xs font-semibold text-slate-500 transition hover:border-[#0e5e6f] hover:text-[#0e5e6f]">
-            <BriefcaseBusiness className="h-4 w-4" />Job post
+          {kind === "company" ? <Link href="/dashboard/company/jobs" className="flex h-full min-w-20 flex-col items-center justify-center gap-0.5 border-b-2 border-transparent px-2 text-xs font-semibold text-slate-500 transition hover:border-[#0e5e6f] hover:text-[#0e5e6f]">
+            <BriefcaseBusiness className="h-4 w-4" />Candidați
           </Link> : null}
         </nav>
 

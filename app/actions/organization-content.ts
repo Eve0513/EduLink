@@ -157,6 +157,7 @@ export async function createCompanyJob(input: z.infer<typeof jobSchema>): Promis
   });
   if (error) return { error: jobDatabaseError(error) };
   revalidatePath("/dashboard/company");
+  revalidatePath("/dashboard/company/jobs");
   revalidatePath("/marketplace");
   return { success: true };
 }

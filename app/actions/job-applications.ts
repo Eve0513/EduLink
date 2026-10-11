@@ -24,3 +24,23 @@ export async function applyToJob(formData: FormData) {
   revalidatePath("/marketplace");
   return { success: true };
 }
+export type JobApplicationStatus = "submitted" | "reviewing" | "accepted" | "rejected";
+
+export async function updateJobApplicationStatus(applicationId: string, status: JobApplicationStatus) {
+  if (!/^[0-9a-f-]{36}$/i.test(applicationId)) return { error: "Aplicația nu a putut fi identificată." };
+  if (!["submitted", "reviewing", "accepted", "rejected"].includes(status)) return { error: "Statusul aplicației nu este valid." };
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Sesiunea a expirat. Autentifică-te din nou." };
+  const { data: profile } = await supabase.from("profiles").select("role,onboarding_completed").eq("id", user.id).maybeSingle();
+  if (profile?.role !== "company" || !profile.onboarding_completed) return { error: "Doar o companie activă poate actualiza aplicațiile." };
+  const { data: application } = await supabase.from("job_applications").select("id,job_id").eq("id", applicationId).maybeSingle();
+  if (!application) return { error: "Aplicația nu mai este disponibilă." };
+  const { data: job } = await supabase.from("jobs").select("company_id").eq("id", application.job_id).maybeSingle();
+  if (job?.company_id !== user.id) return { error: "Nu ai acces la această aplicație." };
+  const { error } = await supabase.from("job_applications").update({ status, updated_at: new Date().toISOString() }).eq("id", applicationId);
+  if (error) return { error: "Statusul nu a putut fi salvat. Încearcă din nou." };
+  revalidatePath("/dashboard/company/jobs");
+  revalidatePath("/marketplace");
+  return { success: true };
+}
